@@ -1,0 +1,4 @@
+
+RUN runtest.p.
+
+
