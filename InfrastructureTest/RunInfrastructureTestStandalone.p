@@ -25,35 +25,41 @@ IF CONNECTED(DatabaseName)
 THEN MESSAGE "Connection ok" VIEW-AS ALERT-BOX.
 ELSE MESSAGE "Db not connected" VIEW-AS ALERT-BOX.
 
- //CONNECT -db glims -H hyperion -S glims96glimssv -U mipsdev -P denmark.
+RUN ConnectToDb("genro", ApplicationName, OUTPUT ErrorMessage).
+RUN ConnectToDb("genrw", ApplicationName, OUTPUT ErrorMessage).
+//RUN ConnectToDb("glims_sh", ApplicationName, OUTPUT ErrorMessage).
+RUN ConnectToDb("glims", ApplicationName, OUTPUT ErrorMessage).
 
-//MESSAGE SUBSTITUTE("zw: &1 connect to database &2":U, PROGRAM-NAME( 1 ), DatabaseName ) VIEW-AS ALERT-BOX.
-
-ASSIGN DatabaseName = 'genro':U.
-RUN gp_dbcon(DatabaseName, DatabaseName, 4,
-            ApplicationName, ?, OUTPUT ErrorMessage) NO-ERROR.
-
-ASSIGN DatabaseName = 'genrw':U.
-RUN gp_dbcon(DatabaseName, DatabaseName, 4,
-            ApplicationName, ?, OUTPUT ErrorMessage) NO-ERROR.
-
-ASSIGN DatabaseName = 'glims':U.
-RUN gp_dbcon(DatabaseName, DatabaseName, 4,
-            ApplicationName, ?, OUTPUT ErrorMessage) NO-ERROR.
-
-//MESSAGE SUBSTITUTE("zw: &1 connected... ":U, PROGRAM-NAME( 1 ) ) VIEW-AS ALERT-BOX.
 IF ErrorMessage > ''
 THEN MESSAGE ErrorMessage VIEW-AS ALERT-BOX.
 ELSE IF CONNECTED(DatabaseName)
 THEN MESSAGE "Connection ok" VIEW-AS ALERT-BOX.
 ELSE MESSAGE "Db not connected" VIEW-AS ALERT-BOX.
 
-//MESSAGE SUBSTITUTE("zw: &1 start run infrastructure testests ":U, PROGRAM-NAME( 1 ) ) VIEW-AS ALERT-BOX.
-RUN RunInfrastructureTest(SESSION:PARAM).
-//MESSAGE SUBSTITUTE("zw: &1 end run infrastructure testests ":U, PROGRAM-NAME( 1 ) ) VIEW-AS ALERT-BOX.
+MESSAGE SESSION:PARAMETER VIEW-AS ALERT-BOX.
 
-DISCONNECT VALUE(DatabaseName).
+RUN RunInfrastructureTest(SESSION:PARAMETER).
+
+IF CONNECTED("genro")
+THEN DISCONNECT "genro".
+
+IF CONNECTED("genrw")
+THEN DISCONNECT "genrw".
+
+IF CONNECTED("glims")
+THEN DISCONNECT "glims".
 
 MESSAGE "Done" VIEW-AS ALERT-BOX.
 
 QUIT.
+
+
+PROCEDURE ConnectToDb:
+
+    DEFINE INPUT PARAMETER DatabaseName AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER ApplicationName AS CHARACTER NO-UNDO.
+    DEFINE OUTPUT PARAMETER ErrorMessage AS CHARACTER NO-UNDO.
+
+    RUN gp_dbcon(DatabaseName, DatabaseName, 4,
+            ApplicationName, ?, OUTPUT ErrorMessage) NO-ERROR.
+END.

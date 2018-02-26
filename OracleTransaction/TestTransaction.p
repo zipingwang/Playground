@@ -17,7 +17,7 @@ END.
 
 DO TRANSACTION:
     CREATE b_gp_SpeedTestHistory. //after create this. other session can query status of this record if it is progress db. oracle not.  
-    MESSAGE "Session A SessionID:" SESSION DBTYPE("genrw") "in transaction" TRANSACTION  ". Record Id:" b_gp_SpeedTestHistory.sth_Id "Population:" b_gp_SpeedTestHistory.sth_Population VIEW-AS ALERT-BOX.
+    
     ASSIGN 
         b_gp_SpeedTestHistory.sth_Population = 9999
         b_gp_SpeedTestHistory.sth_TotalDuration = 0

@@ -4,7 +4,7 @@ Query komt uit onze productie code en ziet er verdomd onschuldig uit… is query d
 
 DEFINE VARIABLE QueryString AS CHARACTER NO-UNDO.
 
-DEFINE VARIABLE JoinOnServer AS LOGICAL INITIAL NO.
+DEFINE VARIABLE JoinOnServer AS LOGICAL INITIAL YES.
 DEFINE VARIABLE joinOnSqlDb AS CHARACTER NO-UNDO INITIAL "QUERY-TUNING(JOIN-BY-SQLDB)".
 DEFINE VARIABLE NoJoinOnSqlDb AS CHARACTER NO-UNDO INITIAL "QUERY-TUNING(NO-JOIN-BY-SQLDB)".
 DEFINE VARIABLE hQuery AS HANDLE NO-UNDO.
@@ -41,16 +41,16 @@ MESSAGE SUBSTITUTE("START  ~n&1", QueryToExecute) VIEW-AS ALERT-BOX.
 ETIME(YES).   
 hQuery:QUERY-OPEN.
 hQuery:GET-FIRST().
-DO WHILE NOT hQuery:QUERY-OFF-END AND ICOUNT < 5000:
+DO WHILE NOT hQuery:QUERY-OFF-END AND ICOUNT < 50:
     hQuery:Get-Next().
     ASSIGN ICOUNT = ICOUNT + 1.
 END.
 DELETE OBJECT hQuery.
 MESSAGE SUBSTITUTE(" END - etime = &1":U,ETIME(NO) ) VIEW-AS ALERT-BOX.
 
-//has no effect on Progress DB
-//Join on server:YES, 50, 377
-//Join on server:NO, 50, 381
+//if get only 50 records, NO-JOIN-BY-SQLDB is much faster 
+//Join on server:YES, 50, 9742
+//Join on server:NO, 50, 896
 
-//Join on server:YES, 5000, 39175
-//Join on server:NO, 5000, 37583
+//Join on server:YES, 5000, 24263
+//Join on server:NO, 5000, 33533
