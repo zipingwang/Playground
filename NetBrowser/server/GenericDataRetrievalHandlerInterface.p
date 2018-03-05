@@ -1,14 +1,14 @@
- 
+
  /*------------------------------------------------------------------------
     File        : GenericDataRetriver
-    Purpose     : 
-    Syntax      : 
-    Description : 
+    Purpose     :
+    Syntax      :
+    Description :
     Author(s)   : zipingwa
     Created     : Tue Feb 13 11:57:54 CET 2018
-    Notes       : 
+    Notes       :
   ----------------------------------------------------------------------*/
-  
+
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 USING Playground.NetBrowser.shared.DataRetrievalRequest FROM PROPATH.
@@ -24,12 +24,12 @@ DEFINE OUTPUT PARAMETER DataRetrievalResponse AS DataRetrievalResponse NO-UNDO.
 
 /* --------------------------------------------------------------------- */
 
-DEFINE VARIABLE GenericDataRetrievalHandler AS GenericDataRetrievalHandler NO-UNDO. 
+DEFINE VARIABLE GenericDataRetrievalHandler AS GenericDataRetrievalHandler NO-UNDO.
 
 ASSIGN GenericDataRetrievalHandler = NEW GenericDataRetrievalHandler().
 ASSIGN DataRetrievalResponse = NEW DataRetrievalResponse().
 
-ASSIGN LastTempTableHandle = GenericDataRetrievalHandler:GetData(DataRetrievalRequest, OUTPUT DataRetrievalResponse).
+ASSIGN LastTempTableHandle = GenericDataRetrievalHandler:RetrievalData(DataRetrievalRequest, OUTPUT DataRetrievalResponse).
 
 
 

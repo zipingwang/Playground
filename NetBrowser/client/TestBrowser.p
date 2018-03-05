@@ -1,13 +1,13 @@
 
 /*------------------------------------------------------------------------
     File        : TestBrowser.p
-    Purpose     : 
+    Purpose     :
 
     Syntax      :
 
-    Description : 
+    Description :
 
-    Author(s)   : 
+    Author(s)   :
     Created     : Fri Feb 16 09:45:20 CET 2018
     Notes       :
   ----------------------------------------------------------------------*/
@@ -16,10 +16,10 @@
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
-USING Playground.NetBrowser.client.BrwUser4 FROM PROPATH.
+USING Playground.NetBrowser.client.BrwUser9 FROM PROPATH.
 
-DEFINE VARIABLE BrwUser AS BrwUser4.
+DEFINE VARIABLE BrwUser AS BrwUser9.
 
-ASSIGN BrwUser = NEW BrwUser4().
+ASSIGN BrwUser = NEW BrwUser9().
 
 WAIT-FOR System.Windows.Forms.Application:Run ( BrwUser ).
