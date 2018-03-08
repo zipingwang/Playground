@@ -78,6 +78,10 @@ CLASS Playground.NetBrowser.shared.DataRetrievalRequest SERIALIZABLE:
     GET.
     SET.
 
+    DEFINE PUBLIC PROPERTY ActiveRowPosition AS INTEGER NO-UNDO
+    GET.
+    SET.
+
     /*comma separated table names. e.g. sc_User,gp_language*/
     DEFINE PUBLIC PROPERTY BufferNames AS CHARACTER NO-UNDO
     GET():

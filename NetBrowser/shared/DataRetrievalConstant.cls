@@ -74,4 +74,9 @@ CLASS Playground.NetBrowser.shared.DataRetrievalConstant FINAL:
         RETURN "Backwards".
     END.
 
+    DEFINE PUBLIC STATIC PROPERTY PreviousRequestIsStillBusy AS CHARACTER NO-UNDO
+    GET():
+        RETURN "PreviousRequestIsStillBusy".
+    END.
+
 END CLASS.

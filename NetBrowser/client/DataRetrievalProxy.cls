@@ -53,7 +53,7 @@ CLASS Playground.NetBrowser.client.DataRetrievalProxy:
     /*****************************************************************************/
 
     METHOD PUBLIC VOID RetrievalData(INPUT-OUTPUT CurrentTempTableHandle AS HANDLE, DataRetrievalRequest AS DataRetrievalRequest,
-        OUTPUT DataRetrievalResponse AS DataRetrievalResponse):
+        OUTPUT DataRetrievalResponse AS DataRetrievalResponse, TempTableQueryHandle AS HANDLE):
 
         DEFINE VARIABLE LastTempTableHandle AS HANDLE NO-UNDO.
         DEFINE VARIABLE NumberOfRecordsAfterRetrieverData AS INTEGER NO-UNDO.
@@ -61,7 +61,12 @@ CLASS Playground.NetBrowser.client.DataRetrievalProxy:
 
         /* --------------------------------------------------------------------- */
 
-        ASSIGN DataRetrievalResponse = NEW DataRetrievalResponse().
+        IF AllowNewRequest = NO
+        THEN DO:
+            ASSIGN DataRetrievalResponse = NEW DataRetrievalResponse().
+            DataRetrievalResponse:HasError = YES.
+            DataRetrievalResponse:ErrorMessage = DataRetrievalConstant:PreviousRequestIsStillBusy.
+        END.
 
         IF AllowNewRequest = YES
         THEN DO:
@@ -71,6 +76,12 @@ CLASS Playground.NetBrowser.client.DataRetrievalProxy:
             ASSIGN NumberOfRecordsBeforeRetrieverData =  GetNumberOfRecordsInTemptable(CurrentTempTableHandle).
             RUN Playground/NetBrowser/server/GenericDataRetrievalHandlerInterface
                 ON AppServerHandle (DataRetrievalRequest, OUTPUT TABLE-HANDLE LastTempTableHandle, OUTPUT DataRetrievalResponse).
+
+            IF DataRetrievalResponse:HasError = YES
+            THEN DO:
+                MESSAGE DataRetrievalResponse:ErrorMessage VIEW-AS ALERT-BOX.
+                RETURN.
+            END.
 
             IF DataRetrievalResponse:HasError = NO
             THEN DO:
@@ -89,15 +100,24 @@ CLASS Playground.NetBrowser.client.DataRetrievalProxy:
                     OR (DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:ChangeSorting)
                 THEN DO:
                     CurrentTempTableHandle:EMPTY-TEMP-TABLE().
+                    NumberOfRecordsBeforeRetrieverData = 0.
+                    IF VALID-HANDLE(TempTableQueryHandle)
+                    THEN TempTableQueryHandle:QUERY-OPEN().
                 END.
+
 RUN playground/temptablehelper/dumptemptable(CurrentTempTableHandle, "d:\temp\temptablebeforemerge.xml").
 RUN playground/temptablehelper/dumptemptable(LastTempTableHandle, "d:\temp\LastTempTableHandle.xml").
                 IF DataRetrievalResponse:DataRetrievalRequest:Direction = DataRetrievalConstant:Forwards
-                THEN CurrentTempTableHandle:COPY-TEMP-TABLE(LastTempTableHandle, YES).
+                THEN DO:
+                    DataRetrievalResponse:ActiveRowPosition = DataRetrievalResponse:DataRetrievalRequest:ActiveRowPosition.
+                    CurrentTempTableHandle:COPY-TEMP-TABLE(LastTempTableHandle, YES).
+                END.
                 ELSE DO:
                     LastTempTableHandle:COPY-TEMP-TABLE(CurrentTempTableHandle, YES).
                     CurrentTempTableHandle:EMPTY-TEMP-TABLE().
                     CurrentTempTableHandle:COPY-TEMP-TABLE(LastTempTableHandle, YES).
+                    DataRetrievalResponse:ActiveRowPosition=
+                        DataRetrievalResponse:NumberOfRecordsRetrieved + DataRetrievalResponse:DataRetrievalRequest:ActiveRowPosition.
                 END.
 
                 ASSIGN NumberOfRecordsAfterRetrieverData = GetNumberOfRecordsInTemptable(CurrentTempTableHandle).

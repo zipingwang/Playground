@@ -19,10 +19,13 @@ USING Consultingwerk.Util.ErrorHelper FROM PROPATH.
 USING be.mips.ablframework.shared.database.TableInfo FROM PROPATH.
 USING Playground.NetBrowser.shared.RowIdHelper FROM PROPATH.
 USING Playground.NetBrowser.shared.DataRetrievalConstant FROM PROPATH.
+USING Playground.NetBrowser.shared.DataRetrievalException FROM PROPATH.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
+    DEFINE VARIABLE DataRetrievalResponse_ AS DataRetrievalResponse NO-UNDO.
+    DEFINE VARIABLE Found AS LOGICAL NO-UNDO INITIAL NO.
 
     METHOD PUBLIC HANDLE RetrievalData(DataRetrievalRequest AS DataRetrievalRequest, OUTPUT DataRetrievalResponse AS DataRetrievalResponse):
         DEFINE VARIABLE QueryString AS CHARACTER NO-UNDO.
@@ -41,11 +44,13 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
         DEFINE VARIABLE FieldName AS CHARACTER NO-UNDO.
         DEFINE VARIABLE Counter AS INTEGER NO-UNDO.
         DEFINE VARIABLE NumberOfBuffers AS INTEGER NO-UNDO.
+        DEFINE VARIABLE ReturnValue AS LOGICAL NO-UNDO.
 
         ASSIGN
             DataRetrievalResponse = NEW DataRetrievalResponse()
             DataRetrievalResponse:DataRetrievalRequest = DataRetrievalRequest
             DataRetrievalResponse:ProcessStartTime = NOW
+            DataRetrievalResponse_ = DataRetrievalResponse
             .
 
         //ASSIGN BufferHandle = TEMP-TABLE VALUE(ClientToServerContext:TempTableName):DEFAULT-BUFFER-HANDLE.
@@ -107,7 +112,7 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
 
         //RUN playground/temptablehelper/dumptemptable (TempTableHandle, "d:\temp\temptablebeforefill.xml").
 
-        //TempTableBufferHandle:EMPTY-TEMP-TABLE().
+
 /*END CREATE TEMP TABLE*/
 
 /*-- GET FirstRowIdsInWholeDB*/
@@ -121,21 +126,33 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
 /*---CHANGE FASTPOSITION QUERY*/
         IF DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:FastPosition
         THEN DO:
-            MESSAGE DataRetrievalRequest:GetQueryStringForFastPosition() VIEW-AS ALERT-BOX.
+           // MESSAGE DataRetrievalRequest:GetQueryStringForFastPosition() VIEW-AS ALERT-BOX.
             QueryHandle:QUERY-CLOSE().
             QueryHandle:QUERY-PREPARE(DataRetrievalRequest:GetQueryStringForFastPosition()).
             QueryHandle:QUERY-OPEN().
-            QueryHandle:GET-FIRST(NO-LOCK).
-
+            ReturnValue = QueryHandle:GET-FIRST(NO-LOCK).
+            IF ReturnValue = NO
+            THEN DO:
+                UNDO, THROW NEW DataRetrievalException
+                    (SUBSTITUTE("Cannot do fast position. query: &1", DataRetrievalRequest:GetQueryStringForFastPosition())).
+            END.
             DEFINE VARIABLE QueryRowIdentifier AS QueryRowIdentifier NO-UNDO.
             QueryRowIdentifier = NEW QueryRowIdentifier().
             QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
-
             QueryHandle:QUERY-CLOSE().
+            DataRetrievalResponse:ActiveRowId = QueryRowIdentifier:ToString().
+
+
             QueryHandle:QUERY-PREPARE(DataRetrievalRequest:GetQueryString()).
             QueryHandle:QUERY-OPEN().
             QueryHandle:GET-FIRST(NO-LOCK).
-            QueryRowIdentifier:RepositionQuery(QueryHandle).
+            ReturnValue = QueryRowIdentifier:RepositionQuery(QueryHandle).
+            IF ReturnValue = NO
+            THEN DO:
+                UNDO, THROW NEW DataRetrievalException
+                    (SUBSTITUTE("Cannot RepositionQuery. rowids: &1", QueryRowIdentifier:ToString())).
+            END.
+
             QueryHandle:REPOSITION-BACKWARD(10).
             QueryHandle:GET-NEXT(NO-LOCK).
             QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
@@ -143,6 +160,22 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
 
         END.
 /*END CHANGE FASTPOSITION QUERY*/
+
+/*---CHANGE Sorting RepositionId*/
+        IF DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:ChangeSorting
+        THEN DO:
+
+            QueryRowIdentifier = NEW QueryRowIdentifier().
+            QueryRowIdentifier:ParseString(DataRetrievalRequest:ToBeRepositionedRecord).
+            QueryRowIdentifier:RepositionQuery(QueryHandle).
+            DataRetrievalResponse:ActiveRowId = DataRetrievalRequest:ToBeRepositionedRecord.
+            QueryHandle:GET-NEXT(NO-LOCK).
+            QueryHandle:REPOSITION-BACKWARD(10).
+            QueryHandle:GET-NEXT(NO-LOCK).
+            QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
+            DataRetrievalRequest:ToBeRepositionedRecord = QueryRowIdentifier:ToString().
+        END.
+/*END CHANGE Sorting RepositionId*/
 
         FillTempTable(QueryHandle, TempTableHandle, TempTableBufferHandle,
             BufferHandles, NumberOfBuffers,  DataRetrievalRequest, DataRetrievalResponse).
@@ -165,6 +198,14 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
             END.
         END FINALLY.
 
+    END.
+
+    /*****************************************************************************/
+    METHOD PUBLIC HANDLE RetrievalDataWithoutBatch(DataRetrievalRequest AS DataRetrievalRequest, OUTPUT DataRetrievalResponse AS DataRetrievalResponse):
+        IF DataRetrievalRequest:BatchSize <=0 THEN
+        DO:
+
+        END.
     END.
 
     /*****************************************************************************/
@@ -191,44 +232,23 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
 
         TempTableBufferHandle:ATTACH-DATA-SOURCE(DataSourceHandle, ?, ?, ?).
         IF DataRetrievalRequest:BatchSize > -1 THEN TempTableBufferHandle:BATCH-SIZE = DataRetrievalRequest:BatchSize.  /*fill temp-table with x number of records*/
-        //TempTableBufferHandle:FILL-MODE = "REPLACE":U.
 
-/*--REPOSITION*/
-     /*   IF DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:FastPosition
-        THEN DO:
-            //QueryHandle:REPOSITION-BACKWARD(10).
-            QueryHandle:REPOSITION-FORWARD(10).
-            QueryHandle:GET-NEXT().
-            QueryRowIdentifier = NEW QueryRowIdentifier().
-            QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
-            DataRetrievalRequest:ToBeRepositionedRecord = QueryRowIdentifier:ToString().
-        END.
-     */
+/*REPOSITION*/
         IF DataRetrievalRequest:ToBeRepositionedRecord > ""
         THEN DO:
-            /* it works
-            QueryRowIdentifier = NEW QueryRowIdentifier().
-            QueryRowIdentifier:ParseString(DataRetrievalRequest:ToBeRepositionedRecord).
-            QueryRowIdentifier:SetBufferRestartRowids(TempTableBufferHandle).
-            */
 
-/* it works
-            QueryRowIdentifier = NEW QueryRowIdentifier().
-            QueryRowIdentifier:ParseString(DataRetrievalRequest:ToBeRepositionedRecord).
-            QueryRowIdentifier:RepositionQuery(QueryHandle).
-            QueryHandle:GET-NEXT().
-            QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
-            QueryRowIdentifier:SetBufferRestartRowids(TempTableBufferHandle).
-*/
-
-            //QueryHandle:REPOSITION-TO-ROWID(TO-ROWID('0x000000000008168e'), TO-ROWID('0x000000000000d102')).
             QueryRowIdentifier = NEW QueryRowIdentifier().
             IF DataRetrievalRequest:Direction = DataRetrievalConstant:FORWARDS AND DataRetrievalRequest:BatchSize > 0
             THEN DO:
                 QueryRowIdentifier:ParseString(DataRetrievalRequest:ToBeRepositionedRecord).
                 QueryRowIdentifier:RepositionQuery(QueryHandle).
-                QueryHandle:GET-NEXT(NO-LOCK).
-                QueryHandle:GET-NEXT(NO-LOCK).
+
+                IF DataRetrievalResponse:FirstRowIdsInWholeDB = QueryRowIdentifier:ToString()
+                THEN QueryHandle:GET-PREV(NO-LOCK).
+                ELSE DO:
+                    QueryHandle:GET-NEXT(NO-LOCK).
+                    QueryHandle:GET-NEXT(NO-LOCK).
+                END.
                 QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
                 QueryRowIdentifier:SetBufferRestartRowids(TempTableBufferHandle).
             END.
@@ -247,24 +267,46 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
 /*END REPOSITION*/
 
 /*--SET CALLBACK AND FILL*/
-        //TempTableBufferHandle:SET-CALLBACK("AFTER-FILL":U, "AfterFillCallback":U, THIS-OBJECT).
+
+        DataRetrievalResponse:PositionOfRepositionedRowIdInCurrentBatch = 0.
+        ASSIGN Found = NO.
         TempTableBufferHandle:SET-CALLBACK("AFTER-ROW-FILL":U, "AfterRowFillCallback":U, THIS-OBJECT) .
         TempTableBufferHandle:FILL().
-/*END CALLBACK AND FILL*/
 
-        IF VALID-HANDLE (TempTableBufferHandle) AND (NOT TempTableBufferHandle:LAST-BATCH) AND VALID-HANDLE (TempTableBufferHandle:DATA-SOURCE) THEN DO:
+        /*e.g. fastpostion to 'z' but it is at 3 before end, it it has maximum 13 rows. we want 50(it is required for ultragrid)*/
+        IF DataRetrievalRequest:BatchSize > 0
+            AND DataRetrievalResponse:LastRowIdsInThisBatch = DataRetrievalResponse:LastRowIdsInWholeDB
+            AND DataRetrievalResponse:NumberOfRecordsRetrieved < DataRetrievalResponse:DataRetrievalRequest:BatchSize
+            AND DataRetrievalResponse:FirstRowIdsInThisBatch <> DataRetrievalResponse:FirstRowIdsInWholeDB
+            AND (DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:FastPosition
+                OR DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:ChangeSorting)
+        THEN DO:
+            TempTableBufferHandle:EMPTY-TEMP-TABLE().
+
             QueryRowIdentifier = NEW QueryRowIdentifier().
-            QueryRowIdentifier:GetDataSourceNextRowids (DataSourceHandle) .
+            IF DataRetrievalResponse:ActiveRowId <= ""
+            THEN
+                MESSAGE DataRetrievalResponse:ActiveRowId VIEW-AS ALERT-BOX.
 
-            DataRetrievalResponse:LastRecordInTheBatch = QueryRowIdentifier:ToString() .
-            //MESSAGE DataRetrievalResponse:LastRecordInTheBatch VIEW-AS ALERT-BOX.
-            //            GarbageCollectorHelper:DeleteObject (QueryRowIdentifier) .
-        END.
+            QueryRowIdentifier:ParseString(DataRetrievalResponse:ActiveRowId).
+            QueryHandle:QUERY-OPEN().
+            QueryRowIdentifier:RepositionQuery(QueryHandle).
+            //DataRetrievalResponse:RepositionedRowId = DataRetrievalResponse:RepositionedRowId.
+            QueryHandle:GET-NEXT(NO-LOCK).
+            QueryHandle:REPOSITION-BACKWARD(DataRetrievalResponse:DataRetrievalRequest:BatchSize - DataRetrievalResponse:NumberOfRecordsRetrieved).
+            QueryHandle:GET-NEXT(NO-LOCK).
+            QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
+            //DataRetrievalRequest:ToBeRepositionedRecord = QueryRowIdentifier:ToString().
 
-        IF VALID-HANDLE (TempTableBufferHandle) AND (TempTableBufferHandle:LAST-BATCH) AND VALID-HANDLE (TempTableBufferHandle:DATA-SOURCE) THEN DO:
-            DataRetrievalResponse:IsLastBatch = YES.
-            LogManager:WriteMessage("zwa last batch").
+            ASSIGN Found = NO
+                DataRetrievalResponse_:FirstRowIdsInThisBatch = ?
+                DataRetrievalResponse_:LastRowIdsInThisBatch = ?
+                DataRetrievalResponse_:PositionOfRepositionedRowIdInCurrentBatch = 0
+                DataRetrievalResponse_:NumberOfRecordsRetrieved = 0.
+            QueryRowIdentifier:SetBufferRestartRowids(TempTableBufferHandle).
+            TempTableBufferHandle:FILL().
         END.
+/*END CALLBACK AND FILL*/
 
     END.
 
@@ -318,7 +360,7 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
 
     /*****************************************************************************/
 
-     METHOD PUBLIC FINAL VOID AfterFillCallback(DATASET-HANDLE TempTableHandle):
+    METHOD PUBLIC FINAL VOID AfterFillCallback(DATASET-HANDLE TempTableHandle):
         DEFINE VARIABLE QueryHandle AS HANDLE NO-UNDO.
         DEFINE VARIABLE BufferHandle AS HANDLE NO-UNDO.
 
@@ -343,24 +385,63 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
 
     END METHOD. /* AfterFillCallback */
 
+    /*****************************************************************************/
+
     METHOD PUBLIC FINAL VOID AfterRowFillCallback(DATASET-HANDLE DataSetHandle):
         DEFINE VARIABLE QueryHandle AS HANDLE NO-UNDO.
         DEFINE VARIABLE BufferHandle AS HANDLE NO-UNDO.
+        DEFINE VARIABLE BufferCounter AS INTEGER NO-UNDO.
         DEFINE VARIABLE Counter AS INTEGER NO-UNDO.
 
         /* --------------------------------------------------------------------- */
 
         ASSIGN BufferHandle = DataSetHandle:GET-BUFFER-HANDLE("temptable").
-        DO Counter = 1 TO BufferHandle:DATA-SOURCE:NUM-SOURCE-BUFFERS:
-            IF Counter = 1 THEN
+        DO BufferCounter = 1 TO BufferHandle:DATA-SOURCE:NUM-SOURCE-BUFFERS:
+            IF BufferCounter = 1 THEN
                 BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE =
-                    STRING(BufferHandle:DATA-SOURCE:GET-SOURCE-BUFFER(Counter):ROWID).
+                    STRING(BufferHandle:DATA-SOURCE:GET-SOURCE-BUFFER(BufferCounter):ROWID).
             ELSE DO:
                 BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE =
-                    SUBSTITUTE("&1&2&3":U, STRING(BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE), CHR(5), STRING(BufferHandle:DATA-SOURCE:GET-SOURCE-BUFFER(Counter):ROWID)).
+                    SUBSTITUTE("&1&2&3":U, STRING(BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE), CHR(5),
+                        STRING(BufferHandle:DATA-SOURCE:GET-SOURCE-BUFFER(BufferCounter):ROWID)).
             END.
         END.
 
+        IF DataRetrievalResponse_:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:FastPosition
+            OR DataRetrievalResponse_:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:ChangeSorting
+            THEN DO:
+               /* IF STRING(BufferHandle:BUFFER-FIELD("usr_LoginName":U):BUFFER-VALUE) = "5556_user2"
+                THEN DO:
+                    MESSAGE STRING(BufferHandle:BUFFER-FIELD("usr_LoginName":U):BUFFER-VALUE) BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE
+                      DataRetrievalResponse_:RepositionedRowId  VIEW-AS ALERT-BOX.
+                END.*/
+
+                IF STRING(BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE) = DataRetrievalResponse_:ActiveRowId
+                   // OR STRING(BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE) = DataRetrievalResponse_:DataRetrievalRequest:ToBeRepositionedRecord
+                THEN ASSIGN Found = YES.
+
+                IF Found = NO
+                THEN ASSIGN DataRetrievalResponse_:PositionOfRepositionedRowIdInCurrentBatch = DataRetrievalResponse_:PositionOfRepositionedRowIdInCurrentBatch + 1.
+        END.
+
+        IF DataRetrievalResponse_:FirstRowIdsInThisBatch <= ""
+        THEN  DataRetrievalResponse_:FirstRowIdsInThisBatch = STRING(BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE).
+
+        DataRetrievalResponse_:LastRowIdsInThisBatch = STRING(BufferHandle:BUFFER-FIELD("f_rowid_":U):BUFFER-VALUE).
+        DataRetrievalResponse_:NumberOfRecordsRetrieved = DataRetrievalResponse_:NumberOfRecordsRetrieved + 1.
+
     END METHOD. /* AfterRowFillCallback */
+
+    /*****************************************************************************/
+
+    METHOD PUBLIC INTEGER GetRepositionBackwardSteps(QueryHandle AS Handle):
+        DEFINE VARIABLE Counter AS INTEGER NO-UNDO.
+
+        DO WHILE QueryHandle:QUERY-OFF-END = NO:
+            ASSIGN Counter = Counter + 1.
+            QueryHandle:GET-NEXT(NO-LOCk).
+        END.
+
+    END.
 
 END CLASS.

@@ -16,10 +16,10 @@
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
-USING Playground.NetBrowser.client.BrwUser9 FROM PROPATH.
+USING Playground.NetBrowser.client.brw.BrwUser10 FROM PROPATH.
 
-DEFINE VARIABLE BrwUser AS BrwUser9.
+DEFINE VARIABLE BrwUser AS BrwUser10.
 
-ASSIGN BrwUser = NEW BrwUser9().
+ASSIGN BrwUser = NEW BrwUser10().
 
 WAIT-FOR System.Windows.Forms.Application:Run ( BrwUser ).

@@ -67,7 +67,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
         UltraGrid:AfterRowActivate:Subscribe(Browser_AfterRowActivate).
         FastPositionTextWidget = NEW FastPositionTextWidget().
         FastPositionTextWidget:VISIBLE = NO.
-        
+
         THIS-OBJECT:UseDefaultSearchMethod = UseDefaultSearchMethod.
         THIS-OBJECT:WaitingTimeForTriggerSearch = WaitingTimeForTriggerSearch.
 
@@ -102,6 +102,8 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
         THEN RETURN.
 
         IF NOT VALID-OBJECT(THIS-OBJECT:FastPositionTextField)
+            AND NOT e:Modifiers:Equals(Keys:Control) AND NOT e:KEYCODE = KeyS:Up
+            AND NOT e:KEYCODE = KeyS:Down
         THEN InitializeFastPositioningControls(CAST(sender, Control)).
 
         ASSIGN FastPositionCharDownAction = ?.
@@ -115,7 +117,9 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
                     DoFastPosition().
                     RETURN.
                 END.
-                WHEN e:KeyCode:Equals(Keys:Space) OR WHEN e:KeyCode:Equals(Keys:Tab) OR WHEN e:Modifiers:Equals(Keys:Control)
+                WHEN e:KeyCode:Equals(Keys:Space) OR WHEN e:KeyCode:Equals(Keys:Tab)
+                    OR WHEN e:Modifiers:Equals(Keys:Control) OR WHEN e:Modifiers:Equals(KEYS:Up)
+                    OR WHEN e:Modifiers:Equals(KEYS:Down)
                 THEN ASSIGN FastPositionCharDownAction = "IGNORE":U.
                 /* Use forward slash as space, as in Glims 8 (since spacebar selects row) */
                 WHEN e:KeyCode:Equals(Keys:Divide)
@@ -126,10 +130,14 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
         IF FastPositionCharDownAction <> ?
         THEN FastPositionTextField:AddCharAction(FastPositionCharDownAction).
 
-        FastPositionTextField:VISIBLE = YES.
+        IF VALID-OBJECT(FastPositionTextField)
+        THEN FastPositionTextField:VISIBLE = YES.
 
-        FastPositionTimer:Stop().
-        FastPositionTimer:Start().
+        IF VALID-OBJECT(FastPositionTimer)
+        THEN DO:
+            FastPositionTimer:Stop().
+            FastPositionTimer:Start().
+        END.
 
     END METHOD.
 
@@ -177,14 +185,14 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
              RequestSerch:Publish(THIS-OBJECT, NEW SimpleStringEventArgs(FastPositionTextField:Text)).
         ELSE DO:
             ASSIGN ColumnName = UltraGrid:DisplayLayout:Bands[0]:SortedColumns[0]:Key.
-            
+
             /*deselect all*/
             DO RowIndex = 0 TO UltraGrid:Rows:Count - 1 :
                 UltraGrid:Rows[RowIndex]:Selected = FALSE.
             END.
-            
+
             DO RowIndex = 0 TO UltraGrid:Rows:Count - 1 :
-                
+
                 IF UltraGrid:Rows[RowIndex]:Cells[ColumnName]:Text BEGINS FastPositionTextField:TEXT
                 THEN DO:
                     UltraGrid:Rows[RowIndex]:Selected = TRUE.

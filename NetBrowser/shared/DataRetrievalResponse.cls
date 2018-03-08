@@ -20,7 +20,20 @@ CLASS Playground.NetBrowser.shared.DataRetrievalResponse SERIALIZABLE:
     e.g. for each sc_User, first gp_Language.., it has two buffers, the LastRecordInTheBatch will be something like this:
         0x0000dc4,0x253654.
     */
-    DEFINE PUBLIC PROPERTY LastRecordInTheBatch AS CHARACTER NO-UNDO
+  /*  DEFINE PUBLIC PROPERTY LastRecordInTheBatch AS CHARACTER NO-UNDO
+    GET.
+    SET.*/
+
+    /*e.g fasposition, or from client request. DataRetrievalRequest.ToBeRepositionedRecord*/
+    DEFINE PUBLIC PROPERTY ActiveRowId AS CHARACTER NO-UNDO
+    GET.
+    SET.
+
+    DEFINE PUBLIC PROPERTY FirstRowIdUsedInFill AS CHARACTER NO-UNDO
+    GET.
+    SET.
+
+    DEFINE PUBLIC PROPERTY PositionOfRepositionedRowIdInCurrentBatch AS INTEGER NO-UNDO
     GET.
     SET.
 
@@ -37,18 +50,32 @@ CLASS Playground.NetBrowser.shared.DataRetrievalResponse SERIALIZABLE:
     SET.
 
     DEFINE PUBLIC PROPERTY IsLastBatch AS LOGICAL NO-UNDO INITIAL NO
-    GET.
-    SET.
+    GET():
+        RETURN THIS-OBJECT:LastRowIdsInThisBatch = THIS-OBJECT:LastRowIdsInWholeDB.
+    END.
 
     DEFINE PUBLIC PROPERTY IsFirstBatch AS LOGICAL NO-UNDO INITIAL NO
-    GET.
-    SET.
+    GET():
+        RETURN THIS-OBJECT:FirstRowIdsInThisBatch = THIS-OBJECT:FirstRowIdsInWholeDB.
+    END.
 
     DEFINE PUBLIC PROPERTY FirstRowIdsInWholeDB AS CHARACTER NO-UNDO
     GET.
     SET.
 
     DEFINE PUBLIC PROPERTY LastRowIdsInWholeDB AS CHARACTER NO-UNDO
+    GET.
+    SET.
+
+    DEFINE PUBLIC PROPERTY FirstRowIdsInThisBatch AS CHARACTER NO-UNDO
+    GET.
+    SET.
+
+    DEFINE PUBLIC PROPERTY LastRowIdsInThisBatch AS CHARACTER NO-UNDO
+    GET.
+    SET.
+
+    DEFINE PUBLIC PROPERTY ActiveRowPosition AS INTEGER NO-UNDO
     GET.
     SET.
 
