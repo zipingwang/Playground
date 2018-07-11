@@ -28,7 +28,7 @@ CLASS Playground.NetBrowser.shared.DataRetrievalRequest SERIALIZABLE:
     SET.
 */
 
-    /*native 4gl query. e.g for each sc_User*/
+    /* e.g " Name BEGINS 'Tu'" */
     DEFINE PUBLIC PROPERTY FastPositionQueryString AS CHARACTER NO-UNDO
     GET.
     SET.

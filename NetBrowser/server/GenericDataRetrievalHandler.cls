@@ -153,7 +153,7 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
                     (SUBSTITUTE("Cannot RepositionQuery. rowids: &1", QueryRowIdentifier:ToString())).
             END.
 
-            QueryHandle:REPOSITION-BACKWARD(10).
+            QueryHandle:REPOSITION-BACKWARD(DataRetrievalConstant:StepsOfRepositionBackwards).
             QueryHandle:GET-NEXT(NO-LOCK).
             QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
             DataRetrievalRequest:ToBeRepositionedRecord = QueryRowIdentifier:ToString().
@@ -170,12 +170,29 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
             QueryRowIdentifier:RepositionQuery(QueryHandle).
             DataRetrievalResponse:ActiveRowId = DataRetrievalRequest:ToBeRepositionedRecord.
             QueryHandle:GET-NEXT(NO-LOCK).
-            QueryHandle:REPOSITION-BACKWARD(10).
+            QueryHandle:REPOSITION-BACKWARD(DataRetrievalConstant:StepsOfRepositionBackwards).
             QueryHandle:GET-NEXT(NO-LOCK).
             QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
             DataRetrievalRequest:ToBeRepositionedRecord = QueryRowIdentifier:ToString().
         END.
 /*END CHANGE Sorting RepositionId*/
+
+/*---CHANGE HOME RepositionId*/
+        IF DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey
+        THEN DO:      
+            DataRetrievalRequest:Direction = DataRetrievalConstant:FORWARDS.
+            DataRetrievalRequest:ToBeRepositionedRecord = DataRetrievalResponse:FirstRowIdsInWholeDB.
+        END.
+/*END CHANGE HOME RepositionId*/
+
+/*---CHANGE END RepositionId*/
+        IF DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey
+        THEN DO:      
+            DataRetrievalRequest:ToBeRepositionedRecord = DataRetrievalResponse:LastRowIdsInWholeDB.
+            DataRetrievalRequest:Direction = DataRetrievalConstant:BACKWARDS.
+        END.
+/*END CHANGE END RepositionId*/
+
 
         FillTempTable(QueryHandle, TempTableHandle, TempTableBufferHandle,
             BufferHandles, NumberOfBuffers,  DataRetrievalRequest, DataRetrievalResponse).
@@ -256,8 +273,18 @@ CLASS Playground.NetBrowser.server.GenericDataRetrievalHandler:
             THEN DO:
                 QueryRowIdentifier:ParseString(DataRetrievalRequest:ToBeRepositionedRecord).
                 QueryRowIdentifier:RepositionQuery(QueryHandle).
-                QueryHandle:REPOSITION-BACKWARD(DataRetrievalRequest:BatchSize).
-                QueryHandle:GET-PREV(NO-LOCK).
+                
+                IF DataRetrievalResponse:LastRowIdsInWholeDB = QueryRowIdentifier:ToString()
+                THEN DO:
+                    QueryHandle:REPOSITION-BACKWARD(DataRetrievalRequest:BatchSize).
+                    QueryHandle:GET-NEXT(NO-LOCK).
+                    QueryHandle:GET-NEXT(NO-LOCK).
+                END.
+                ELSE DO:
+                    QueryHandle:REPOSITION-BACKWARD(DataRetrievalRequest:BatchSize).
+                    //QueryHandle:GET-PREV(NO-LOCK).
+                END.   
+                
                 QueryRowIdentifier:GetQueryCurrentRowids(QueryHandle).
                 QueryRowIdentifier:SetBufferRestartRowids(TempTableBufferHandle).
             END.

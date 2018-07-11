@@ -53,16 +53,21 @@ CLASS Playground.NetBrowser.shared.DataRetrievalConstant FINAL:
     GET():
         RETURN "ScrollUp".
     END.
+    
+    DEFINE PUBLIC STATIC PROPERTY ScrollDown AS CHARACTER NO-UNDO
+    GET():
+        RETURN "ScrollDown".
+    END.
 
     DEFINE PUBLIC STATIC PROPERTY ChangeSorting AS CHARACTER NO-UNDO
     GET():
         RETURN "ChangeSorting".
     END.
 
-    DEFINE PUBLIC STATIC PROPERTY OffEnd AS CHARACTER NO-UNDO
+  /*  DEFINE PUBLIC STATIC PROPERTY OffEnd AS CHARACTER NO-UNDO
     GET():
         RETURN "OffEnd".
-    END.
+    END.*/
 
     DEFINE PUBLIC STATIC PROPERTY Forwards AS CHARACTER NO-UNDO
     GET():
@@ -77,6 +82,12 @@ CLASS Playground.NetBrowser.shared.DataRetrievalConstant FINAL:
     DEFINE PUBLIC STATIC PROPERTY PreviousRequestIsStillBusy AS CHARACTER NO-UNDO
     GET():
         RETURN "PreviousRequestIsStillBusy".
+    END.
+    
+    //for case of fastpostion and sorting, there are 9 records before the fastpostion/sorting record
+    DEFINE PUBLIC STATIC PROPERTY StepsOfRepositionBackwards AS INTEGER NO-UNDO
+    GET():
+        RETURN 10.
     END.
 
 END CLASS.

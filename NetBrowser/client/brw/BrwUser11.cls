@@ -67,7 +67,8 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
     DEFINE VARIABLE RowScrollRegion AS RowScrollRegion NO-UNDO.
     DEFINE VARIABLE BrowserExtension AS BrowserExtension NO-UNDO.
     DEFINE VARIABLE IsScrollingUp AS LOGICAL NO-UNDO.
-    DEFINE VARIABLE BatchSize_ AS INTEGER NO-UNDO INITIAL -1.
+    DEFINE VARIABLE BatchSize_ AS INTEGER NO-UNDO INITIAL 50.
+    DEFINE VARIABLE IsBusyWithDisplay AS LOGICAL NO-UNDO INITIAL NO.
 
     /*****************************************************************************/
 
@@ -397,7 +398,8 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
                 LoadData(DataRetrievalRequest).
             END.
         END.
-        ELSE DO: //backwards
+        ELSE IF Direction = DataRetrievalConstant:Backwards
+        THEN DO: //backwards
             IF FirstVisibleRow:Index < 2
                 AND STRING(FirstVisibleRow:Cells["f_rowid_"]:Value) <> DataRetrievalResponse:FirstRowIdsInWholeDB
             THEN DO:
@@ -412,6 +414,29 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
                 LoadData(DataRetrievalRequest).
             END.
         END.
+        ELSE IF Direction = DataRetrievalConstant:HomeKey
+        THEN DO: 
+            ASSIGN 
+                DataRetrievalRequest = CreateDataRetrievalRequest()                   
+                DataRetrievalRequest:ToBeRepositionedRecord = ?
+                DataRetrievalRequest:SortingPhrase = THIS-OBJECT:SortExpression
+                DataRetrievalRequest:ActiveRowPosition = BindingSource:POSITION
+                DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey                    
+                .
+                LoadData(DataRetrievalRequest).
+            
+        END.
+        ELSE IF Direction = DataRetrievalConstant:EndKey
+        THEN DO: 
+            ASSIGN
+                DataRetrievalRequest = CreateDataRetrievalRequest()  
+                DataRetrievalRequest:SortingPhrase = THIS-OBJECT:SortExpression
+                DataRetrievalRequest:ActiveRowPosition = BindingSource:POSITION
+                DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey                    
+                .
+                LoadData(DataRetrievalRequest).
+            
+        END.
     END.
 
     /*****************************************************************************/
@@ -420,11 +445,16 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
         DEFINE VARIABLE ErrorMessage AS CHARACTER NO-UNDO.
 
         /* --------------------------------------------------------------------- */
-
+        
+        IF IsBusyWithDisplay = YES
+        THEN RETURN 0.    
+            
         IF VALID-OBJECT(DataRetrievalResponse) AND DataRetrievalRequest:Direction = DataRetrievalConstant:BACKWARDS
             AND DataRetrievalResponse:FirstRowIdsInWholeDB = STRING(ultraGrid1:Rows[0]:Cells["f_rowid_"]:Value)
             AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:FastPosition
             AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:ChangeSorting
+            AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:HomeKey
+            AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:EndKey
         THEN DO:
             //MESSAGE "first batch " VIEW-AS ALERT-BOX.
             RETURN 0.
@@ -433,6 +463,8 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
             AND  DataRetrievalResponse:LastRowIdsInWholeDB = STRING(ultraGrid1:Rows[ultraGrid1:Rows:Count - 1]:Cells["f_rowid_"]:Value)
             AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:FastPosition
             AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:ChangeSorting
+            AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:HomeKey
+            AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:EndKey
         THEN DO:
             //MESSAGE "last batch " VIEW-AS ALERT-BOX.
             RETURN 0.
@@ -461,7 +493,14 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
             MESSAGE DataRetrievalResponse:ErrorMessage VIEW-AS ALERT-BOX.
             RETURN.
         END.
-
+        
+        ASSIGN IsBusyWithDisplay = YES.
+       /* IF BatchSize_> -1 
+        THEN DO:
+            THIS-OBJECT:ultraGrid1:AfterRowRegionScroll:Unsubscribe(AfterRowRegionScroll).
+            THIS-OBJECT:ultraGrid1:BeforeRowRegionScroll:Unsubscribe(BeforeRowRegionScroll).
+        END.*/
+        
         IF NOT VALID-HANDLE(TempTableQueryHandle)
         THEN DO:
             CREATE QUERY TempTableQueryHandle.
@@ -507,10 +546,32 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
             BindingSource:POSITION = DataRetrievalResponse:ActiveRowPosition.
         END.
 
+        IF DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey            
+        THEN DO:
+            RowScrollRegion:ScrollPosition = 0.
+        END.
+            
         IF DataRetrievalResponse:DataRetrievalRequest:Direction = DataRetrievalConstant:Backwards
+            AND DataRetrievalResponse:DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:EndKey
         THEN DO:
             RowScrollRegion:ScrollPosition = RowScrollRegion:ScrollPosition + DataRetrievalResponse:NumberOfRecordsRetrieved - 1.
         END.
+        ELSE IF DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey
+        THEN DO:
+            RowScrollRegion:ScrollPosition = DataRetrievalResponse:NumberOfRecordsRetrieved - ultraGrid1:DisplayLayout:RowScrollRegions[0]:VisibleRows:Count + 2.
+        END.
+        
+      /*  FINALLY:
+            IF BatchSize_> -1 AND DataRetrievalResponse:HasError = NO
+            THEN DO:
+                THIS-OBJECT:ultraGrid1:AfterRowRegionScroll:Subscribe(AfterRowRegionScroll).
+                THIS-OBJECT:ultraGrid1:BeforeRowRegionScroll:Subscribe(BeforeRowRegionScroll).
+            END.                    
+        END FINALLY.*/
+        
+        FINALLY:
+             ASSIGN IsBusyWithDisplay = NO.    
+        END FINALLY.        
 
     END.
 
@@ -605,13 +666,21 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
 
         IF e:KeyCode = System.Windows.Forms.Keys:UP OR e:KEYCODE = System.Windows.Forms.Keys:PageUp
         THEN DO:
-            LoadData(DataRetrievalConstant:Backwards).
+            LoadData(DataRetrievalConstant:Backwards).             
         END.
         ELSE IF e:KeyCode = System.Windows.Forms.Keys:Down OR e:KEYCODE = System.Windows.Forms.Keys:PageDown
         THEN DO:
-            LoadData(DataRetrievalConstant:Forwards).
+            LoadData(DataRetrievalConstant:Forwards).            
         END.
-
+        ELSE IF e:KeyCode = System.Windows.Forms.Keys:Home
+        THEN DO:    
+                   
+            LoadData(DataRetrievalConstant:HomeKey).
+        END.
+        ELSE IF e:KeyCode = System.Windows.Forms.Keys:End
+        THEN DO:   
+            LoadData(DataRetrievalConstant:EndKey).  
+        END.
     END.
 
     METHOD PROTECTED VOID ultraGrid1_AfterSortChange(Sender AS System.Object, e AS Infragistics.Win.UltraWinGrid.BandEventArgs):

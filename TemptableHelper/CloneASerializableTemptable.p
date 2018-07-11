@@ -18,9 +18,15 @@
     DEFINE VARIABLE ObjectHandle AS HANDLE NO-UNDO.    
     DEFINE VARIABLE ObjectType AS CHARACTER NO-UNDO.   
     
+    DEFINE VARIABLE OriginalRowId AS ROWID NO-UNDO.
+    
     /* --------------------------------------------------------------------- */
     
-    ASSIGN SourceTemptableBufferHandle = SourceTemptableHandle:DEFAULT-BUFFER-HANDLE.
+    /*important don't change default buffer, otherwise caller maybe also use the default buffer*/
+    CREATE BUFFER SourceTemptableBufferHandle FOR TABLE SourceTemptableHandle.     
+    //do don't use default buffer ASSIGN SourceTemptableBufferHandle = SourceTemptableHandle:DEFAULT-BUFFER-HANDLE.
+    
+    ASSIGN OriginalRowId = SourceTemptableBufferHandle:ROWID.
     
     CREATE TEMP-TABLE NewTemptableHandle.
     
@@ -74,5 +80,6 @@
         NewTableBufferHandle:BUFFER-VALIDATE().    
         QueryHandle:GET-NEXT().
     END.
-   
+    
+    DELETE OBJECT SourceTemptableBufferHandle.
     DELETE OBJECT QueryHandle.

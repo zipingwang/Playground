@@ -13,6 +13,7 @@ USING Progress.Lang.*.
 USING Playground.NetBrowser.shared.DataRetrievalRequest FROM PROPATH.
 USING Playground.NetBrowser.shared.DataRetrievalResponse FROM PROPATH.
 USING Playground.NetBrowser.shared.DataRetrievalConstant FROM PROPATH.
+USING Consultingwerk.Util.LogManager FROM PROPATH.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
@@ -74,6 +75,7 @@ CLASS Playground.NetBrowser.client.DataRetrievalProxy:
             ASSIGN AllowNewRequest = NO.
 
             ASSIGN NumberOfRecordsBeforeRetrieverData =  GetNumberOfRecordsInTemptable(CurrentTempTableHandle).
+        LogManager:WriteMessage("zwa RetrievalData", DataRetrievalRequest:TriggeredBy).
             RUN Playground/NetBrowser/server/GenericDataRetrievalHandlerInterface
                 ON AppServerHandle (DataRetrievalRequest, OUTPUT TABLE-HANDLE LastTempTableHandle, OUTPUT DataRetrievalResponse).
 
@@ -95,9 +97,12 @@ CLASS Playground.NetBrowser.client.DataRetrievalProxy:
                     CurrentTempTableHandle:TEMP-TABLE-PREPARE("temptable").
                 END.
 
-                /*clear old data before merge if it is fastposition*/
+                /*clear old data before merge if it is fastposition, soring, homekey, endkey*/
                 IF (DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:FastPosition)
                     OR (DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:ChangeSorting)
+                    OR (DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey)
+                    OR (DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey)
+                    
                 THEN DO:
                     CurrentTempTableHandle:EMPTY-TEMP-TABLE().
                     NumberOfRecordsBeforeRetrieverData = 0.
@@ -120,6 +125,16 @@ RUN playground/temptablehelper/dumptemptable(LastTempTableHandle, "d:\temp\LastT
                         DataRetrievalResponse:NumberOfRecordsRetrieved + DataRetrievalResponse:DataRetrievalRequest:ActiveRowPosition.
                 END.
 
+                IF DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey
+                THEN DO:
+                    DataRetrievalResponse:ActiveRowPosition = 0.
+                END.
+                ELSE  IF DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey
+                THEN DO:
+                    DataRetrievalResponse:ActiveRowPosition = DataRetrievalResponse:NumberOfRecordsRetrieved - 1.
+                END.
+                   
+                
                 ASSIGN NumberOfRecordsAfterRetrieverData = GetNumberOfRecordsInTemptable(CurrentTempTableHandle).
 
                 DataRetrievalResponse:NumberOfRecordsRetrieved = NumberOfRecordsAfterRetrieverData - NumberOfRecordsBeforeRetrieverData.

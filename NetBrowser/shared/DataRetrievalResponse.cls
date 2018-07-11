@@ -75,6 +75,7 @@ CLASS Playground.NetBrowser.shared.DataRetrievalResponse SERIALIZABLE:
     GET.
     SET.
 
+    //in grid, the row has blue background
     DEFINE PUBLIC PROPERTY ActiveRowPosition AS INTEGER NO-UNDO
     GET.
     SET.

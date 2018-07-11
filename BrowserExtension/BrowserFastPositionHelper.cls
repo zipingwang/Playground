@@ -120,6 +120,8 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
                 WHEN e:KeyCode:Equals(Keys:Space) OR WHEN e:KeyCode:Equals(Keys:Tab)
                     OR WHEN e:Modifiers:Equals(Keys:Control) OR WHEN e:Modifiers:Equals(KEYS:Up)
                     OR WHEN e:Modifiers:Equals(KEYS:Down)
+                    OR WHEN e:KEYCODE = KEYS:Down
+                    OR WHEN e:KEYCODE = KEYS:UP
                 THEN ASSIGN FastPositionCharDownAction = "IGNORE":U.
                 /* Use forward slash as space, as in Glims 8 (since spacebar selects row) */
                 WHEN e:KeyCode:Equals(Keys:Divide)
@@ -127,10 +129,10 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
             END CASE.
         END.
 
-        IF FastPositionCharDownAction <> ?
+        IF FastPositionCharDownAction <> ? AND FastPositionCharDownAction <> "IGNORE"
         THEN FastPositionTextField:AddCharAction(FastPositionCharDownAction).
 
-        IF VALID-OBJECT(FastPositionTextField)
+        IF VALID-OBJECT(FastPositionTextField) AND FastPositionCharDownAction <> "IGNORE"
         THEN FastPositionTextField:VISIBLE = YES.
 
         IF VALID-OBJECT(FastPositionTimer)
@@ -258,7 +260,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
     /*****************************************************************************/
 
     METHOD VOID FastPositionTextField_TextChanged(sender AS Object, e AS EventArgs):
-
+        
         IF UltraGrid:DisplayLayout:Bands[0]:SortedColumns:Count > 0
         THEN DO:
             UltraGrid:DisplayLayout:Bands[0]:SortedColumns[0]:Header:Appearance:BackColor =
@@ -269,6 +271,9 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
         THEN FastPositionTextWidget:TheSearchText = SUBSTITUTE("Search text '&1'":U, FastPositionTextField:TEXT).
 
         FastPositionTextWidget:VISIBLE = FastPositionTextField:TEXT <> "":U.
+        
+        IF FastPositionTextField:VISIBLE
+        THEN FastPositionTextWidget:BringToFront().
 
     END METHOD.
 

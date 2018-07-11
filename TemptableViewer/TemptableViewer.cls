@@ -1,12 +1,12 @@
- 
+
  /*------------------------------------------------------------------------
     File        : TemptableViewer
-    Purpose     : 
-    Syntax      : 
-    Description : 
+    Purpose     :
+    Syntax      :
+    Description :
     Author(s)   : zipingwa
     Created     : Thu Jan 11 10:33:16 CET 2018
-    Notes       : 
+    Notes       :
   ----------------------------------------------------------------------*/
 
 USING Progress.Lang.*.
@@ -21,8 +21,8 @@ USING Consultingwerk.Util.ErrorHelper FROM PROPATH.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
-CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form: 
-    
+CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
+
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE ultraButtonReset AS Infragistics.Win.Misc.UltraButton NO-UNDO.
     DEFINE PRIVATE VARIABLE ultraGrid1 AS Infragistics.Win.UltraWinGrid.UltraGrid NO-UNDO.
@@ -34,17 +34,17 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
     DEFINE VARIABLE BindingSource AS Progress.Data.BindingSource NO-UNDO.
     DEFINE VARIABLE QueryHandle AS HANDLE NO-UNDO.
     DEFINE VARIABLE DataTableHandle AS HANDLE NO-UNDO.
-        
-    CONSTRUCTOR PUBLIC TemptableViewer (  ):	
-        
+
+    CONSTRUCTOR PUBLIC TemptableViewer (  ):
+
         SUPER().
         InitializeComponent().
         THIS-OBJECT:ComponentsCollection:ADD(THIS-OBJECT:components).
-        
+
         THIS-OBJECT:Load:Subscribe(THIS-OBJECT:TemptableViewer_Load).
-        ultraButtonFilter:Click:Subscribe(THIS-OBJECT:ultraButtonFilter_Click). 
-        ultraButtonReset:Click:Subscribe(THIS-OBJECT:ultraButtonReset_Click). 
-          
+        ultraButtonFilter:Click:Subscribe(THIS-OBJECT:ultraButtonFilter_Click).
+        ultraButtonReset:Click:Subscribe(THIS-OBJECT:ultraButtonReset_Click).
+
         CATCH e AS Progress.Lang.Error:
             UNDO, THROW e.
         END CATCH.
@@ -52,14 +52,14 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
     END CONSTRUCTOR.
 
     /*****************************************************************************/
-    
+
     METHOD PRIVATE VOID InitializeComponent(  ):
-        
+
         /* NOTE: The following method is automatically generated.
-        
+
         We strongly suggest that the contents of this method only be modified using the
         Visual Designer to avoid any incompatible modifications.
-        
+
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
         @VisualDesigner.FormMember (NeedsInitialize="true":U).
         DEFINE VARIABLE appearance1 AS Infragistics.Win.Appearance NO-UNDO.
@@ -99,9 +99,9 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
         appearance12 = NEW Infragistics.Win.Appearance().
         THIS-OBJECT:splitContainer1 = NEW System.Windows.Forms.SplitContainer().
         THIS-OBJECT:ultraGrid1 = NEW Infragistics.Win.UltraWinGrid.UltraGrid().
+        THIS-OBJECT:ultraButtonReset = NEW Infragistics.Win.Misc.UltraButton().
         THIS-OBJECT:ultraButtonFilter = NEW Infragistics.Win.Misc.UltraButton().
         THIS-OBJECT:textBoxFilterText = NEW System.Windows.Forms.TextBox().
-        THIS-OBJECT:ultraButtonReset = NEW Infragistics.Win.Misc.UltraButton().
         CAST(THIS-OBJECT:splitContainer1, System.ComponentModel.ISupportInitialize):BeginInit().
         THIS-OBJECT:splitContainer1:Panel1:SuspendLayout().
         THIS-OBJECT:splitContainer1:Panel2:SuspendLayout().
@@ -134,7 +134,7 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
         /*  */
         appearance1:BackColor = System.Drawing.SystemColors:Window.
         appearance1:BorderColor = System.Drawing.SystemColors:InactiveCaption.
-        THIS-OBJECT:ultraGrid1:DisplayLayout:Appearance = appearance1.
+        //THIS-OBJECT:ultraGrid1:DisplayLayout:Appearance = appearance1.
         THIS-OBJECT:ultraGrid1:DisplayLayout:BorderStyle = Infragistics.Win.UIElementBorderStyle:Solid.
         THIS-OBJECT:ultraGrid1:DisplayLayout:CaptionVisible = Infragistics.Win.DefaultableBoolean:False.
         appearance2:BackColor = System.Drawing.SystemColors:ActiveBorder.
@@ -157,7 +157,7 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
         THIS-OBJECT:ultraGrid1:DisplayLayout:Override:ActiveCellAppearance = appearance5.
         appearance6:BackColor = System.Drawing.SystemColors:Highlight.
         appearance6:ForeColor = System.Drawing.SystemColors:HighlightText.
-        THIS-OBJECT:ultraGrid1:DisplayLayout:Override:ActiveRowAppearance = appearance6.
+        //THIS-OBJECT:ultraGrid1:DisplayLayout:Override:ActiveRowAppearance = appearance6.
         THIS-OBJECT:ultraGrid1:DisplayLayout:Override:BorderStyleCell = Infragistics.Win.UIElementBorderStyle:Dotted.
         THIS-OBJECT:ultraGrid1:DisplayLayout:Override:BorderStyleRow = Infragistics.Win.UIElementBorderStyle:Dotted.
         appearance7:BackColor = System.Drawing.SystemColors:Window.
@@ -179,7 +179,7 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
         THIS-OBJECT:ultraGrid1:DisplayLayout:Override:HeaderStyle = Infragistics.Win.HeaderStyle:WindowsXPCommand.
         appearance11:BackColor = System.Drawing.SystemColors:Window.
         appearance11:BorderColor = System.Drawing.Color:Silver.
-        THIS-OBJECT:ultraGrid1:DisplayLayout:Override:RowAppearance = appearance11.
+        //THIS-OBJECT:ultraGrid1:DisplayLayout:Override:RowAppearance = appearance11.
         THIS-OBJECT:ultraGrid1:DisplayLayout:Override:RowSelectors = Infragistics.Win.DefaultableBoolean:False.
         appearance12:BackColor = System.Drawing.SystemColors:ControlLight.
         THIS-OBJECT:ultraGrid1:DisplayLayout:Override:TemplateAddRowAppearance = appearance12.
@@ -193,11 +193,22 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
         THIS-OBJECT:ultraGrid1:TabIndex = 0.
         THIS-OBJECT:ultraGrid1:Text = "ultraGrid1":U.
         /*  */
-        /* ultraButtonFilter */
+        /* ultraButtonReset */
         /*  */
         DEFINE VARIABLE nestedvar0 AS System.Windows.Forms.AnchorStyles NO-UNDO.
         nestedvar0 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:ultraButtonFilter:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        THIS-OBJECT:ultraButtonReset:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        THIS-OBJECT:ultraButtonReset:Location = NEW System.Drawing.Point(737, 12).
+        THIS-OBJECT:ultraButtonReset:Name = "ultraButtonReset":U.
+        THIS-OBJECT:ultraButtonReset:Size = NEW System.Drawing.Size(75, 23).
+        THIS-OBJECT:ultraButtonReset:TabIndex = 2.
+        THIS-OBJECT:ultraButtonReset:Text = "Reset":U.
+        /*  */
+        /* ultraButtonFilter */
+        /*  */
+        DEFINE VARIABLE nestedvar1 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+        nestedvar1 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles).
+        THIS-OBJECT:ultraButtonFilter:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
         THIS-OBJECT:ultraButtonFilter:Location = NEW System.Drawing.Point(637, 12).
         THIS-OBJECT:ultraButtonFilter:Name = "ultraButtonFilter":U.
         THIS-OBJECT:ultraButtonFilter:Size = NEW System.Drawing.Size(75, 23).
@@ -206,24 +217,13 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
         /*  */
         /* textBoxFilterText */
         /*  */
-        DEFINE VARIABLE nestedvar1 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar1 = System.Windows.Forms.AnchorStyles:Left.
-        THIS-OBJECT:textBoxFilterText:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        DEFINE VARIABLE nestedvar2 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+        nestedvar2 = System.Windows.Forms.AnchorStyles:Left.
+        THIS-OBJECT:textBoxFilterText:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
         THIS-OBJECT:textBoxFilterText:Location = NEW System.Drawing.Point(3, 15).
         THIS-OBJECT:textBoxFilterText:Name = "textBoxFilterText":U.
         THIS-OBJECT:textBoxFilterText:Size = NEW System.Drawing.Size(616, 20).
         THIS-OBJECT:textBoxFilterText:TabIndex = 0.
-        /*  */
-        /* ultraButtonReset */
-        /*  */
-        DEFINE VARIABLE nestedvar2 AS System.Windows.Forms.AnchorStyles NO-UNDO.
-        nestedvar2 = CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:ultraButtonReset:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar2, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-        THIS-OBJECT:ultraButtonReset:Location = NEW System.Drawing.Point(737, 12).
-        THIS-OBJECT:ultraButtonReset:Name = "ultraButtonReset":U.
-        THIS-OBJECT:ultraButtonReset:Size = NEW System.Drawing.Size(75, 23).
-        THIS-OBJECT:ultraButtonReset:TabIndex = 2.
-        THIS-OBJECT:ultraButtonReset:Text = "Reset":U.
         /*  */
         /* TemptableViewer */
         /*  */
@@ -241,121 +241,121 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
         CATCH e AS Progress.Lang.Error:
             UNDO, THROW e.
         END CATCH.
-    END METHOD.    
-    
+    END METHOD.
+
     /****************************************************************************/
 
     METHOD PRIVATE VOID TemptableViewer_Load(INPUT sender AS System.Object, INPUT e AS System.EventArgs):
 
         BrowserExtension = NEW BrowserExtension(THIS-OBJECT:ultraGrid1).
-        BrowserExtension           
+        BrowserExtension
             :AddFastPositioningFeature(YES)
             :AddDropFileFeature()
             :FileDropped:Subscribe(THIS-OBJECT:FileDropped).
-                   
+
     END METHOD.
-    
+
     /*****************************************************************************/
-    
+
     METHOD PRIVATE VOID FileDropped(sender AS Progress.Lang.Object, e AS SimpleStringEventArgs):
-        
+
          LoadXmlFile(e:StringValue).
 
-    END METHOD.    
-    
+    END METHOD.
+
     /*****************************************************************************/
-    
+
      METHOD PRIVATE VOID ultraButtonFilter_Click(sender AS System.Object, e AS System.EventArgs):
-        
-        IF NOT VALID-HANDLE(QueryHandle)        
-        THEN RETURN. 
+
+        IF NOT VALID-HANDLE(QueryHandle)
+        THEN RETURN.
 
         QueryHandle:QUERY-PREPARE(SUBSTITUTE("FOR EACH &1 where &2":U, DataTableHandle:Name, textBoxFilterText:Text)).
         QueryHandle:QUERY-OPEN().
-        
-    END METHOD.    
-    
+
+    END METHOD.
+
     /*****************************************************************************/
-    
+
      METHOD PRIVATE VOID ultraButtonReset_Click(sender AS System.Object, e AS System.EventArgs):
-        
-        IF NOT VALID-HANDLE(QueryHandle)        
-        THEN RETURN. 
-        
+
+        IF NOT VALID-HANDLE(QueryHandle)
+        THEN RETURN.
+
         QueryHandle:QUERY-PREPARE("FOR EACH &1":U).
         QueryHandle:QUERY-OPEN().
-        
-    END METHOD.    
-    
+
+    END METHOD.
+
     /*****************************************************************************/
-    
+
      METHOD PRIVATE VOID LoadXmlFile(XmlFile AS CHARACTER):
-        
+
         DEFINE VARIABLE XsdFileName AS CHARACTER NO-UNDO.
-        
+
         /* --------------------------------------------------------------------- */
-        
+
         IF System.IO.File:Exists(XmlFile) = NO
         THEN DO:
            MESSAGE SUBSTITUTE("File not exists: &1", XmlFile) VIEW-AS ALERT-BOX.
            RETURN.
-        END.    
-        
+        END.
+
         ASSIGN XsdFileName = Path:GetDirectoryName(XmlFile) + "\" + Path:GetFileNameWithoutExtension(XmlFile) + ".xsd".
         IF System.IO.File:Exists(XsdFileName) = NO
         THEN DO:
            MESSAGE SUBSTITUTE("XSD File not exists: &1", XsdFileName) VIEW-AS ALERT-BOX.
            RETURN.
-        END.    
-            
+        END.
+
         IF VALID-HANDLE(QueryHandle)
-        THEN DELETE OBJECT QueryHandle. 
-            
+        THEN DELETE OBJECT QueryHandle.
+
         IF VALID-HANDLE(DataTableHandle)
         THEN DELETE OBJECT DataTableHandle.
-        
+
         IF VALID-OBJECT(BindingSource)
         THEN DELETE OBJECT BindingSource.
-            
+
         CREATE TEMP-TABLE DataTableHandle.
-            
+
         DataTableHandle:READ-XMLSCHEMA(
                                         "FILE",                 /*cSourceType*/
-                                        XsdFileName,            /*cFile*/    
+                                        XsdFileName,            /*cFile*/
                                         ?,                      /*lOverrideDefaultMapping*/
                                         ?,                      /*cFieldTypeMapping*/
                                         ?                       /*cVerifySchemaMode*/
                                     ).
-        
+
         DataTableHandle:READ-XML(
                                     "FILE",                 /*cSourceType,*/
-                                    XmlFile,                /*cFile,*/ 
-                                    "EMPTY",                /*cReadMode,*/ 
-                                    ?,                      /*cSchemaLocation,*/ 
-                                    ?,                      /*lOverrideDefaultMapping,*/ 
-                                    ?,                      /*cFieldTypeMapping,*/  
+                                    XmlFile,                /*cFile,*/
+                                    "EMPTY",                /*cReadMode,*/
+                                    ?,                      /*cSchemaLocation,*/
+                                    ?,                      /*lOverrideDefaultMapping,*/
+                                    ?,                      /*cFieldTypeMapping,*/
                                     ?                       /*cVerifySchemaMode*/
-                                ).                    
+                                ).
         CREATE QUERY QueryHandle.
         QueryHandle:SET-BUFFERS(DataTableHandle:DEFAULT-BUFFER-HANDLE).
         QueryHandle:QUERY-PREPARE(SUBSTITUTE("FOR EACH &1":U, DataTableHandle:Name)).
         QueryHandle:FORWARD-ONLY = FALSE.
-   
+
         BindingSource = NEW Progress.Data.BindingSource(QueryHandle).
         BindingSource:AllowEdit = FALSE.
         BindingSource:AllowRemove = FALSE.
         BindingSource:AllowNew = FALSE.
         BindingSource:AutoSort = TRUE.
-        ultraGrid1:SetDataBinding(BindingSource, ?).       
-        
+        ultraGrid1:SetDataBinding(BindingSource, ?).
+
         CATCH err AS Progress.Lang.Error :
-            ErrorHelper:ShowErrorMessageBox(err).       		
-        END CATCH.        
-     
+            ErrorHelper:ShowErrorMessageBox(err).
+        END CATCH.
+
     END METHOD.
-    
+
     /*****************************************************************************/
-    
+
     DESTRUCTOR PUBLIC TemptableViewer ( ):
 
     END DESTRUCTOR.
