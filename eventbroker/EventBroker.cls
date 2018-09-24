@@ -11,12 +11,13 @@
 
 USING Progress.Lang.*.
 USING be.mips.glims.manual.core.Instances FROM PROPATH.
+USING System.ComponentModel.CancelEventArgs FROM ASSEMBLY.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 CLASS Playground.eventbroker.EventBroker:
 
-    DEFINE PUBLIC EVENT DataChanged  SIGNATURE VOID (Data AS CHARACTER).
+    DEFINE PRIVATE EVENT DataChanged  SIGNATURE VOID (Data AS CHARACTER).
 
     DEFINE PUBLIC STATIC PROPERTY Instance AS Playground.eventbroker.EventBroker NO-UNDO
     GET():
@@ -28,10 +29,21 @@ CLASS Playground.eventbroker.EventBroker:
 
 
     METHOD PUBLIC VOID PublishDataChanged(NewData AS CHARACTER):
+        DataChanged:Publish(NewData).
     END.
 
-    METHOD PUBLIC VOID SubscribeDataChanged(TheObject AS Progress.Lang.Object  ):
-
+    METHOD PUBLIC VOID SubscribeDataChanged():
+        DataChanged:Subscribe(PublishDataChanged).
     END.
+
+    DEFINE PUBLIC EVENT NoExactBeginsFoundForFastPosition
+       SIGNATURE VOID(InitialSearhString AS CHARACTER, RealSearchString AS CHARACTER, CancelEventArgs AS CancelEventArgs).
+
+    METHOD PUBLIC VOID InvokeNoExactBeginsFoundForFastPosition
+       (InitialSearhString AS CHARACTER, RealSearchString AS CHARACTER, CancelEventArgs AS CancelEventArgs):
+
+       NoExactBeginsFoundForFastPosition:Publish(InitialSearhString, RealSearchString, CancelEventArgs).
+
+    END METHOD.
 
 END CLASS.
