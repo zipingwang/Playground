@@ -18,7 +18,7 @@ FORM
         FORMAT "X(240)":U
         VIEW-AS EDITOR
         SIZE 300 BY 4
-        AT COL 2 ROW 2
+        AT COL 2 ROW 20
         NO-LABEL
     WITH FRAME DLG_Frame.
 

@@ -35,6 +35,7 @@ USING Infragistics.Win.UltraWinGrid.HeaderClickAction FROM ASSEMBLY.
 USING Playground.NetBrowser.shared.QueryBlock FROM PROPATH.
 USING Infragistics.Win.UltraWinGrid.SortIndicator FROM ASSEMBLY.
 USING Infragistics.Win.UltraWinGrid.CellClickAction FROM ASSEMBLY.
+USING Playground.BrowserExtension.SearchDataSourceOrigin FROM PROPATH.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
@@ -107,7 +108,7 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
         IF BatchSize_ > 0
         THEN DO:
             THIS-OBJECT:ultraGrid1:DisplayLayout:Override:HeaderClickAction = HeaderClickAction:ExternalSortMulti.
-            BrowserExtension:AddFastPositioningFeature(FALSE).
+            BrowserExtension:AddFastPositioningFeature(SearchDataSourceOrigin:Database).
             BrowserExtension:FastPositioningRequestSerch:Subscribe(THIS-OBJECT:BrowserExtension_FastPositioningRequestSerch).
             THIS-OBJECT:ultraGrid1:AfterRowRegionScroll:Subscribe(AfterRowRegionScroll).
             THIS-OBJECT:ultraGrid1:BeforeRowRegionScroll:Subscribe(BeforeRowRegionScroll).
@@ -117,7 +118,7 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
             THIS-OBJECT:ultraGrid1:MouseWheel:Subscribe(THIS-OBJECT:ultraGrid1_MouseWheel).
         END.
         ELSE DO:
-            BrowserExtension:AddFastPositioningFeature(YES).
+            BrowserExtension:AddFastPositioningFeature(SearchDataSourceOrigin:Grid).
         END.
 
         ultraGrid1:DisplayLayout:Override:SelectTypeRow = SelectType:SINGLE.
@@ -415,27 +416,27 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
             END.
         END.
         ELSE IF Direction = DataRetrievalConstant:HomeKey
-        THEN DO: 
-            ASSIGN 
-                DataRetrievalRequest = CreateDataRetrievalRequest()                   
+        THEN DO:
+            ASSIGN
+                DataRetrievalRequest = CreateDataRetrievalRequest()
                 DataRetrievalRequest:ToBeRepositionedRecord = ?
                 DataRetrievalRequest:SortingPhrase = THIS-OBJECT:SortExpression
                 DataRetrievalRequest:ActiveRowPosition = BindingSource:POSITION
-                DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey                    
+                DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey
                 .
                 LoadData(DataRetrievalRequest).
-            
+
         END.
         ELSE IF Direction = DataRetrievalConstant:EndKey
-        THEN DO: 
+        THEN DO:
             ASSIGN
-                DataRetrievalRequest = CreateDataRetrievalRequest()  
+                DataRetrievalRequest = CreateDataRetrievalRequest()
                 DataRetrievalRequest:SortingPhrase = THIS-OBJECT:SortExpression
                 DataRetrievalRequest:ActiveRowPosition = BindingSource:POSITION
-                DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey                    
+                DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey
                 .
                 LoadData(DataRetrievalRequest).
-            
+
         END.
     END.
 
@@ -445,10 +446,10 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
         DEFINE VARIABLE ErrorMessage AS CHARACTER NO-UNDO.
 
         /* --------------------------------------------------------------------- */
-        
+
         IF IsBusyWithDisplay = YES
-        THEN RETURN 0.    
-            
+        THEN RETURN 0.
+
         IF VALID-OBJECT(DataRetrievalResponse) AND DataRetrievalRequest:Direction = DataRetrievalConstant:BACKWARDS
             AND DataRetrievalResponse:FirstRowIdsInWholeDB = STRING(ultraGrid1:Rows[0]:Cells["f_rowid_"]:Value)
             AND DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:FastPosition
@@ -493,14 +494,14 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
             MESSAGE DataRetrievalResponse:ErrorMessage VIEW-AS ALERT-BOX.
             RETURN.
         END.
-        
+
         ASSIGN IsBusyWithDisplay = YES.
-       /* IF BatchSize_> -1 
+       /* IF BatchSize_> -1
         THEN DO:
             THIS-OBJECT:ultraGrid1:AfterRowRegionScroll:Unsubscribe(AfterRowRegionScroll).
             THIS-OBJECT:ultraGrid1:BeforeRowRegionScroll:Unsubscribe(BeforeRowRegionScroll).
         END.*/
-        
+
         IF NOT VALID-HANDLE(TempTableQueryHandle)
         THEN DO:
             CREATE QUERY TempTableQueryHandle.
@@ -546,11 +547,11 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
             BindingSource:POSITION = DataRetrievalResponse:ActiveRowPosition.
         END.
 
-        IF DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey            
+        IF DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:HomeKey
         THEN DO:
             RowScrollRegion:ScrollPosition = 0.
         END.
-            
+
         IF DataRetrievalResponse:DataRetrievalRequest:Direction = DataRetrievalConstant:Backwards
             AND DataRetrievalResponse:DataRetrievalRequest:TriggeredBy <> DataRetrievalConstant:EndKey
         THEN DO:
@@ -560,18 +561,18 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
         THEN DO:
             RowScrollRegion:ScrollPosition = DataRetrievalResponse:NumberOfRecordsRetrieved - ultraGrid1:DisplayLayout:RowScrollRegions[0]:VisibleRows:Count + 2.
         END.
-        
+
       /*  FINALLY:
             IF BatchSize_> -1 AND DataRetrievalResponse:HasError = NO
             THEN DO:
                 THIS-OBJECT:ultraGrid1:AfterRowRegionScroll:Subscribe(AfterRowRegionScroll).
                 THIS-OBJECT:ultraGrid1:BeforeRowRegionScroll:Subscribe(BeforeRowRegionScroll).
-            END.                    
+            END.
         END FINALLY.*/
-        
+
         FINALLY:
-             ASSIGN IsBusyWithDisplay = NO.    
-        END FINALLY.        
+             ASSIGN IsBusyWithDisplay = NO.
+        END FINALLY.
 
     END.
 
@@ -666,20 +667,20 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
 
         IF e:KeyCode = System.Windows.Forms.Keys:UP OR e:KEYCODE = System.Windows.Forms.Keys:PageUp
         THEN DO:
-            LoadData(DataRetrievalConstant:Backwards).             
+            LoadData(DataRetrievalConstant:Backwards).
         END.
         ELSE IF e:KeyCode = System.Windows.Forms.Keys:Down OR e:KEYCODE = System.Windows.Forms.Keys:PageDown
         THEN DO:
-            LoadData(DataRetrievalConstant:Forwards).            
+            LoadData(DataRetrievalConstant:Forwards).
         END.
         ELSE IF e:KeyCode = System.Windows.Forms.Keys:Home
-        THEN DO:    
-                   
+        THEN DO:
+
             LoadData(DataRetrievalConstant:HomeKey).
         END.
         ELSE IF e:KeyCode = System.Windows.Forms.Keys:End
-        THEN DO:   
-            LoadData(DataRetrievalConstant:EndKey).  
+        THEN DO:
+            LoadData(DataRetrievalConstant:EndKey).
         END.
     END.
 

@@ -27,6 +27,7 @@ USING Playground.BrowserExtension.BrowserExtension FROM PROPATH.
 USING Playground.BrowserExtension.BrowserFastPositionHelper FROM PROPATH.
 USING Playground.BrowserExtension.BrowserHelper FROM PROPATH.
 USING be.mips.ablframework.gui.components.widget.FastPositionTextWidget FROM PROPATH.
+USING Playground.BrowserExtension.SearchDataSourceOrigin FROM PROPATH.
 
 CLASS Playground.BrowserExtension.BrowserExtension:
 
@@ -94,14 +95,14 @@ CLASS Playground.BrowserExtension.BrowserExtension:
 
  /*****************************************************************************/
 
-    METHOD PUBLIC BrowserExtension AddFastPositioningFeature(UseDefaultSearchMethod AS LOGICAL):
+    METHOD PUBLIC BrowserExtension AddFastPositioningFeature(MySearchDataSourceOrigin AS SearchDataSourceOrigin):
 
         IF AddFastPositioningFeatureDone = NO
         THEN DO:
             BrowserFastPositionHelper = NEW BrowserFastPositionHelper().
-            BrowserFastPositionHelper:AddFastPostionAbilityToBrowser(UltraGrid, UseDefaultSearchMethod).
+            BrowserFastPositionHelper:AddFastPostionAbilityToBrowser(UltraGrid, MySearchDataSourceOrigin).
 
-            IF UseDefaultSearchMethod = NO
+            IF MySearchDataSourceOrigin = SearchDataSourceOrigin:Database
             THEN BrowserFastPositionHelper:RequestSerch:Subscribe(THIS-OBJECT:BrowserFastPositionHelper_RequestSerch).
 
             AddFastPositioningFeatureDone = YES.

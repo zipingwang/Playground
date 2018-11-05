@@ -1,0 +1,35 @@
+# GLIMS Client Session Startup Options
+# ------------------------------------
+-D 1000 # compiled-file-directory
+-d dmy # date-format
+-nb 240 # nested-block-limit
+-inp 35000 # compiler input buffer
+-tok 4000 # compiler token buffer (max < 1000 for DEC/OSF)
+#-tok 1124		# 1124 is max for CompaqTru64
+-yy 1950 # start year
+-s 200 # stack size (default = 40, max = 63 for windows)
+-h 7 # maximum number of databases connected
+-cpinternal iso8859-1 # stream I/O code page (= ISO Latin-9)
+-cpstream iso8859-1 # stream I/O code page (= ISO Latin-9)
+-cpcoll BASIC 
+-mmax 65534 
+-yr4def # version 9 only
+#      causes 4 digit years on message/export/put unformatted stmt
+-TB 24 
+-TM 32 
+-checkwidth 2 
+-rereadnolock 
+-l 1000 
+-noinactiveidx 
+-debugalert 
+# You're bound to forget things and write our disks full with client logging
+# Use your own .XXXXrc file instead 
+#-asyncqueuesize 655360
+-checkdbe 
+-noroutineinwhere 
+-asyncqueuesize 655360 
+-Bt 1000
+-tttablerange 1000
+-ttindexrange 2000
+-T /pde/appl/glims/tmp  
+

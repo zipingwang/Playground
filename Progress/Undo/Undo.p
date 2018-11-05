@@ -1,0 +1,19 @@
+DEFINE VARIABLE MyInteger AS INTEGER INITIAL 1. /* UNDO! */
+
+DO ON ERROR UNDO, LEAVE:
+
+    ASSIGN MyInteger = 2.
+
+    RUN MyProc.
+
+END.
+
+MESSAGE MyInteger
+    VIEW-AS ALERT-BOX.
+
+PROCEDURE MyProc:
+
+    RETURN ERROR.
+
+END PROCEDURE.
+

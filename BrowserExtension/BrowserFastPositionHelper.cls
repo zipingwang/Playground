@@ -24,6 +24,7 @@ USING System.Windows.Forms.Timer FROM ASSEMBLY.
 USING be.mips.ablframework.gui.FastPositionTextEditor FROM PROPATH.
 USING be.mips.ablframework.gui.components.widget.FastPositionTextWidget FROM PROPATH.
 USING Playground.BrowserExtension.SimpleStringEventArgs FROM PROPATH.
+USING Playground.BrowserExtension.SearchDataSourceOrigin FROM PROPATH.
 
 CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
 
@@ -31,7 +32,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
     DEFINE PRIVATE VARIABLE FastPositionTextField AS FastPositionTextEditor NO-UNDO.
     DEFINE VARIABLE FastPositionCharDownAction AS CHARACTER NO-UNDO.
     DEFINE VARIABLE UltraGrid AS UltraGrid NO-UNDO.
-    DEFINE VARIABLE UseDefaultSearchMethod AS LOGICAL NO-UNDO.
+    DEFINE VARIABLE UseDefaultSearchMethod AS SearchDataSourceOrigin NO-UNDO.
     DEFINE VARIABLE WaitingTimeForTriggerSearch AS INTEGER NO-UNDO INITIAL 750.
     DEFINE VARIABLE IsBusyWithSearching AS LOGICAL NO-UNDO.
 
@@ -51,7 +52,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
 
     /*****************************************************************************/
 
-    METHOD PUBLIC VOID AddFastPostionAbilityToBrowser(UltraGrid AS UltraGrid, UseDefaultSearchMethod AS LOGICAL):
+    METHOD PUBLIC VOID AddFastPostionAbilityToBrowser(UltraGrid AS UltraGrid, UseDefaultSearchMethod AS SearchDataSourceOrigin):
 
         AddFastPostionAbilityToBrowser(UltraGrid, UseDefaultSearchMethod, THIS-OBJECT:WaitingTimeForTriggerSearch).
 
@@ -59,7 +60,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
 
     /*****************************************************************************/
 
-    METHOD PUBLIC VOID AddFastPostionAbilityToBrowser(UltraGrid_ AS UltraGrid, UseDefaultSearchMethod AS LOGICAL, WaitingTimeForTriggerSearch AS INTEGER):
+    METHOD PUBLIC VOID AddFastPostionAbilityToBrowser(UltraGrid_ AS UltraGrid, UseDefaultSearchMethod AS SearchDataSourceOrigin, WaitingTimeForTriggerSearch AS INTEGER):
 
         THIS-OBJECT:UltraGrid = UltraGrid_.
         UltraGrid:KeyDown:SubScribe(THIS-OBJECT:Browser_KeyDown).
@@ -182,7 +183,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
 
         ASSIGN IsBusyWithSearching = YES.
 
-        IF NOT UseDefaultSearchMethod
+        IF UseDefaultSearchMethod = SearchDataSourceOrigin:Database
         THEN
              RequestSerch:Publish(THIS-OBJECT, NEW SimpleStringEventArgs(FastPositionTextField:Text)).
         ELSE DO:
@@ -260,7 +261,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
     /*****************************************************************************/
 
     METHOD VOID FastPositionTextField_TextChanged(sender AS Object, e AS EventArgs):
-        
+
         IF UltraGrid:DisplayLayout:Bands[0]:SortedColumns:Count > 0
         THEN DO:
             UltraGrid:DisplayLayout:Bands[0]:SortedColumns[0]:Header:Appearance:BackColor =
@@ -271,7 +272,7 @@ CLASS Playground.BrowserExtension.BrowserFastPositionHelper:
         THEN FastPositionTextWidget:TheSearchText = SUBSTITUTE("Search text '&1'":U, FastPositionTextField:TEXT).
 
         FastPositionTextWidget:VISIBLE = FastPositionTextField:TEXT <> "":U.
-        
+
         IF FastPositionTextField:VISIBLE
         THEN FastPositionTextWidget:BringToFront().
 
