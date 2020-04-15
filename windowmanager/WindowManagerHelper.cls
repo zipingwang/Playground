@@ -88,7 +88,7 @@ END.
 */
     METHOD STATIC PUBLIC VOID DumpWindowObjectTempTable():
         DEFINE VARIABLE WindowObjectTempTableHandle AS HANDLE NO-UNDO.
-        ASSIGN WindowObjectTempTableHandle = CAST(Framework:WindowManager, windowmanager):GetWindowObjectTempTableHandle().
+        ASSIGN WindowObjectTempTableHandle = CAST(Framework:WindowManager, Windowmanager):GetWindowObjectTempTableHandle().
         RUN playground/temptablehelper/dumptemptable (WindowObjectTempTableHandle, SESSION:TEMP-DIRECTORY + "\\" + "WindowObjectTempTableHandle.xml").
     END.
 

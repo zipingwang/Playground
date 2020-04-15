@@ -22,11 +22,9 @@ CLASS Playground.Mips.Model.ContextObject.ContextObjectBase ABSTRACT IMPLEMENTS 
     DEFINE PUBLIC ABSTRACT PROPERTY ContextName AS CHARACTER NO-UNDO
     GET.
 
-    DEFINE PUBLIC ABSTRACT PROPERTY RibbonDefinition AS RibbonDefinition NO-UNDO
-    GET.
+    METHOD PUBLIC ABSTRACT RibbonDefinition GetRibbonDefinition():
 
-    DEFINE PUBLIC ABSTRACT PROPERTY MenuItemDefinition AS MenuItemDefinition NO-UNDO
-    GET.
+    METHOD PUBLIC ABSTRACT MenuItemDefinition GetMenuItemDefinition():
 
     METHOD PUBLIC ABSTRACT VOID HandleToolCommand(ToolCommandParameter AS ToolCommandParameter):
 

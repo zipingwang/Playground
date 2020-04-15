@@ -104,7 +104,7 @@ CLASS Playground.NetBrowser.client.DataRetrievalProxy:
                     OR (DataRetrievalResponse:DataRetrievalRequest:TriggeredBy = DataRetrievalConstant:EndKey)
                     
                 THEN DO:
-                    CurrentTempTableHandle:EMPTY-TEMP-TABLE().
+                    CurrentTempTableHandle:DEFAULT-BUFFER-HANDLE:EMPTY-TEMP-TABLE().
                     NumberOfRecordsBeforeRetrieverData = 0.
                     IF VALID-HANDLE(TempTableQueryHandle)
                     THEN TempTableQueryHandle:QUERY-OPEN().
@@ -119,7 +119,7 @@ RUN playground/temptablehelper/dumptemptable(LastTempTableHandle, "d:\temp\LastT
                 END.
                 ELSE DO:
                     LastTempTableHandle:COPY-TEMP-TABLE(CurrentTempTableHandle, YES).
-                    CurrentTempTableHandle:EMPTY-TEMP-TABLE().
+                    CurrentTempTableHandle:DEFAULT-BUFFER-HANDLE:EMPTY-TEMP-TABLE().
                     CurrentTempTableHandle:COPY-TEMP-TABLE(LastTempTableHandle, YES).
                     DataRetrievalResponse:ActiveRowPosition=
                         DataRetrievalResponse:NumberOfRecordsRetrieved + DataRetrievalResponse:DataRetrievalRequest:ActiveRowPosition.

@@ -23,6 +23,8 @@ USING System.Windows.Forms.DragEventArgs FROM ASSEMBLY.
 USING System.Windows.Forms.FormClosingEventArgs FROM ASSEMBLY.
 USING Playground.BrowserExtension.SimpleStringEventArgs FROM PROPATH.
 USING Playground.BrowserExtension.BrowserHelper FROM PROPATH.
+USING Playground.NetBrowser.client.brw.BrowserDefinition.BrowserDefinition FROM PROPATH.
+USING Playground.NetBrowser.client.brw.BrowserDefinition.BrowserColumnDefinition FROM PROPATH.
 
 CLASS Playground.BrowserExtension.BrowserHelper FINAL:
 
@@ -179,6 +181,49 @@ CLASS Playground.BrowserExtension.BrowserHelper FINAL:
 
         if(FilesAsString <> ?)
         THEN FileDropped:Publish(THIS-OBJECT, NEW SimpleStringEventArgs(FilesAsString)).
+
+    END METHOD.
+
+    /*****************************************************************************/
+
+    METHOD PUBLIC VOID InitializeGrid(UltraGrid AS UltraGrid, BrowserDefinition AS BrowserDefinition):
+
+        DEFINE VARIABLE Counter AS INTEGER NO-UNDO.
+        DEFINE VARIABLE BrowserColumnDefinition AS BrowserColumnDefinition NO-UNDO.
+
+        /* --------------------------------------------------------------------- */
+
+        DEFINE VARIABLE ultraGridBand1 AS Infragistics.Win.UltraWinGrid.UltraGridBand NO-UNDO.
+        ultraGridBand1 = NEW Infragistics.Win.UltraWinGrid.UltraGridBand(BrowserDefinition:BrowserName, -1).
+
+        CAST(UltraGrid, System.ComponentModel.ISupportInitialize):BeginInit().
+        UltraGrid:SuspendLayout().
+
+        {Consultingwerk/foreachABL.i BrowserColumnDefinition BrowserColumnDefinition_ in BrowserDefinition}
+
+            DEFINE VARIABLE ultraGridColumn6 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+            ultraGridColumn6 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn(BrowserColumnDefinition_:DataSourceName).
+            ultraGridColumn6:Hidden = BrowserColumnDefinition_:Hidden.
+            ultraGridColumn6:Header:Caption = BrowserColumnDefinition_:Caption.
+            ultraGridBand1:COLUMNS:Add(ultraGridColumn6).
+        END.
+
+        /*
+        DO Counter = 1 TO EXTENT(BrowserDefinition:BrowserColumns):
+            ASSIGN BrowserColumnDefinition = BrowserDefinition:BrowserColumns[Counter].
+
+            DEFINE VARIABLE ultraGridColumn6 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+            ultraGridColumn6 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn(BrowserColumnDefinition:DataSourceName).
+            ultraGridColumn6:Hidden = BrowserColumnDefinition:Hidden.
+            ultraGridColumn6:Header:Caption = BrowserColumnDefinition:Caption.
+            ultraGridBand1:COLUMNS:Add(ultraGridColumn6).
+        END.
+        */
+
+        UltraGrid:DisplayLayout:BandsSerializer:Add(ultraGridBand1).
+
+        CAST(UltraGrid, System.ComponentModel.ISupportInitialize):EndInit().
+        UltraGrid:ResumeLayout(FALSE).
 
     END METHOD.
 

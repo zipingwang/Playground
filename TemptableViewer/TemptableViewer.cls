@@ -18,6 +18,7 @@ USING Playground.BrowserExtension.SimpleStringEventArgs FROM PROPATH.
 USING System.IO.Path FROM ASSEMBLY.
 USING System.Runtime.Remoting.Metadata.XmlFieldOrderOption FROM ASSEMBLY.
 USING Consultingwerk.Util.ErrorHelper FROM PROPATH.
+USING Playground.BrowserExtension.SearchDataSourceOrigin FROM PROPATH.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
@@ -249,7 +250,7 @@ CLASS Playground.TemptableViewer.TemptableViewer INHERITS Form:
 
         BrowserExtension = NEW BrowserExtension(THIS-OBJECT:ultraGrid1).
         BrowserExtension
-            :AddFastPositioningFeature(YES)
+            :AddFastPositioningFeature(SearchDataSourceOrigin:Grid)
             :AddDropFileFeature()
             :FileDropped:Subscribe(THIS-OBJECT:FileDropped).
 

@@ -16,10 +16,25 @@
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
-USING Playground.NetBrowser.client.brw.BrwUser11 FROM PROPATH.
+USING Playground.NetBrowser.client.brw.BrwUser13 FROM PROPATH.
+USING System.Windows.Forms.DockStyle FROM ASSEMBLY.
+USING Playground.NetBrowser.client.brw.BrwSiteAttribute FROM PROPATH.
 
-DEFINE VARIABLE BrwUser AS BrwUser11.
+//DEFINE VARIABLE BrwUser AS BrwUser13.
+//ASSIGN BrwUser = NEW BrwUser13().
 
-ASSIGN BrwUser = NEW BrwUser11().
+DEFINE VARIABLE BrwUser AS BrwSiteAttribute.
+ASSIGN BrwUser = NEW BrwSiteAttribute().
 
-WAIT-FOR System.Windows.Forms.Application:Run ( BrwUser ).
+DEFINE VARIABLE Frm AS Progress.Windows.Form NO-UNDO.
+
+ASSIGN
+    Frm = NEW Progress.Windows.Form()
+    Frm:WIDTH = 600
+    Frm:HEIGHT = 800
+    .
+
+Frm:Controls:Add(BrwUser).
+BrwUser:Dock = DockStyle:FILL.
+
+WAIT-FOR System.Windows.Forms.Application:Run (Frm).

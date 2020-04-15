@@ -128,10 +128,36 @@ CLASS Playground.NetBrowser.shared.DataRetrievalRequest SERIALIZABLE:
 
         IF THIS-OBJECT:BatchSize > 0
         THEN ASSIGN QueryString = QueryString + " INDEXED-REPOSITION".
-
+MESSAGE QueryString VIEW-AS ALERT-BOX.
         RETURN QueryString.
 
     END METHOD.
+    
+    /*****************************************************************************/
+    
+    METHOD PUBLIC CHARACTER GetFieldListsForBrowser(  ):
+
+        DEFINE VARIABLE QueryString AS CHARACTER NO-UNDO.
+        DEFINE VARIABLE Counter AS INTEGER NO-UNDO.
+        DEFINE VARIABLE NumberOfQueryBlock AS INTEGER NO-UNDO.
+
+        /* --------------------------------------------------------------------- */
+
+        ASSIGN NumberOfQueryBlock = EXTENT(QueryBlocks).
+
+        DO Counter = 1 TO NumberOfQueryBlock:
+            IF Counter = 1
+            THEN
+                QueryString = QueryBlocks[Counter]:FieldList.
+            ELSE
+                QueryString =  QueryString + " "  + QueryBlocks[Counter]:FieldList.
+        END.
+        QueryString = REPLACE(QueryString, " ", ", ") + ", f_rowid_".
+        MESSAGE "GetFieldListsForBrowser" QueryString VIEW-AS ALERT-BOX.
+        RETURN QueryString.
+
+    END METHOD.
+    
 
     /*****************************************************************************/
 

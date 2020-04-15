@@ -27,15 +27,13 @@ CLASS Playground.Mips.Model.ContextObject.GpSiteObject INHERITS ContextObjectBas
         RETURN "GpSite".
     END.
 
-    DEFINE PUBLIC OVERRIDE PROPERTY RibbonDefinition AS RibbonDefinition NO-UNDO
-    GET:
+    METHOD PUBLIC OVERRIDE RibbonDefinition GetRibbonDefinition():
         RETURN GpSiteRibbon:GetRibbonDefinition().
-    END.
+    END METHOD.
 
-    DEFINE PUBLIC OVERRIDE PROPERTY MenuItemDefinition AS MenuItemDefinition NO-UNDO
-    GET:
+    METHOD PUBLIC OVERRIDE MenuItemDefinition GetMenuItemDefinition():
         RETURN GpSiteMenu:GetMenuItemDefinition().
-    END.
+    END METHOD.
 
     METHOD PUBLIC OVERRIDE VOID HandleToolCommand(ToolCommandParameter AS ToolCommandParameter):
 

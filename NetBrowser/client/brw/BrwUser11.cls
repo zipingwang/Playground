@@ -519,7 +519,8 @@ CLASS Playground.NetBrowser.client.brw.BrwUser11 INHERITS FORM:
                 BindingSource:Batching = NO. /*YES important for OffEnd event */
 
             //BindingSource:OffEnd:Subscribe(OffEndHandler).
-            UltraGrid1:SetDataBinding(BindingSource, ?, YES).
+            //UltraGrid1:SetDataBinding(BindingSource, ?, YES).
+            UltraGrid1:SetDataBinding(BindingSource, ?, NO).
 
         END.
 

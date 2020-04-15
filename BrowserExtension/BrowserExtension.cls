@@ -28,6 +28,7 @@ USING Playground.BrowserExtension.BrowserFastPositionHelper FROM PROPATH.
 USING Playground.BrowserExtension.BrowserHelper FROM PROPATH.
 USING be.mips.ablframework.gui.components.widget.FastPositionTextWidget FROM PROPATH.
 USING Playground.BrowserExtension.SearchDataSourceOrigin FROM PROPATH.
+USING Infragistics.Win.UltraWinGrid.InitializeLayoutEventArgs FROM ASSEMBLY.
 
 CLASS Playground.BrowserExtension.BrowserExtension:
 
@@ -83,9 +84,21 @@ CLASS Playground.BrowserExtension.BrowserExtension:
 
         DEFINE VARIABLE ParentForm AS FORM.
 
+        /* --------------------------------------------------------------------- */
+
+        /*IF AddAutoSaveAndLoadLayoutPreferenceFeatureDone = NO
+        THEN DO:
+            UltraGrid:InitializeLayout:Subscribe(UltraGrid_InitializeLayout).
+            AddAutoSaveAndLoadLayoutPreferenceFeatureDone = YES.
+        END.
+        */
+
+        ASSIGN ParentForm = UltraGrid:FindForm().
+
         IF AddAutoSaveAndLoadLayoutPreferenceFeatureDone = NO AND VALID-OBJECT(ParentForm)
         THEN DO:
             ParentForm:FormClosing:Subscribe(ParentForm_FormClosing).
+            //UltraGrid:InitializeLayout:Subscribe(UltraGrid_InitializeLayout).
             ParentForm:Load:Subscribe(ParentForm_Load).
             AddAutoSaveAndLoadLayoutPreferenceFeatureDone = YES.
         END.
@@ -142,6 +155,24 @@ CLASS Playground.BrowserExtension.BrowserExtension:
     METHOD PRIVATE VOID ParentForm_Load(sender AS System.Object, e AS EventArgs):
 
         BrowserHelper:ApplySavedGridLayout(THIS-OBJECT:UltraGrid).
+
+    END METHOD.
+
+    /*****************************************************************************/
+
+    METHOD PRIVATE VOID UltraGrid_InitializeLayout(sender AS System.Object, e AS InitializeLayoutEventArgs):
+
+        DEFINE VARIABLE ParentForm AS FORM.
+
+        /* --------------------------------------------------------------------- */
+
+        ASSIGN ParentForm = UltraGrid:FindForm().
+
+        BrowserHelper:ApplySavedGridLayout(THIS-OBJECT:UltraGrid).
+        IF VALID-OBJECT(ParentForm)
+        THEN DO:
+            ParentForm:FormClosing:Subscribe(ParentForm_FormClosing).
+        END.
 
     END METHOD.
 

@@ -1,5 +1,6 @@
+
  /*------------------------------------------------------------------------
-    File        : UserBrowser
+    File        : BrwUser13
     Purpose     :
     Syntax      :
     Description :
@@ -15,30 +16,16 @@ USING Playground.NetBrowser.shared.DataRetrievalRequest FROM PROPATH.
 USING Playground.NetBrowser.client.brw.BrowserDefinition.BrowserColumnDefinition FROM PROPATH.
 USING Playground.NetBrowser.shared.QueryBlock FROM PROPATH.
 USING Playground.NetBrowser.shared.DataRetrievalConstant FROM PROPATH.
-USING Playground.Mips.UI.Interface.IView FROM PROPATH.
-USING Playground.Mips.UI.EventArgs.NotifyObjectChangedEventArgs FROM PROPATH.
-USING Playground.Mips.Model.Interface.IContextObject FROM PROPATH.
-USING Playground.Mips.Model.Other.ToolCommandParameter FROM PROPATH.
-USING Playground.Mips.Model.Ribbon.RibbonDefinition FROM PROPATH.
-USING Playground.Mips.Model.ContextMenu.MenuItemDefinition FROM PROPATH.
-USING Playground.Mips.Model.Ribbon.GpSiteRibbon FROM PROPATH.
-USING Playground.Mips.Model.ContextMenu.GpSiteMenu FROM PROPATH.
-USING Playground.Mips.Model.Ribbon.UserRibbon FROM PROPATH.
-USING Playground.Mips.Model.ContextMenu.UserMenu FROM PROPATH.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
-CLASS Playground.Mips.UI.Browser.UserBrowser
-    IMPLEMENTS IView, IContextObject
-    INHERITS GenericBrowser:
+CLASS Playground.NetBrowser.client.brw.BrwUser13 INHERITS GenericBrowser:
 
-    DEFINE PUBLIC PROPERTY ContextName AS CHARACTER NO-UNDO
-    GET:
-        RETURN "ScUser".
-    END.
-
-    /*****************************************************************************/
-
+    DEFINE PUBLIC OVERRIDE PROPERTY BrowserSortColumName_ AS CHARACTER NO-UNDO
+    GET():
+       RETURN "usr_LoginName".
+    END.   
+    
     METHOD PUBLIC OVERRIDE BrowserDefinition GetBrowserDefinition():
 
         DEFINE VARIABLE BrowserDefinition AS BrowserDefinition NO-UNDO.
@@ -74,11 +61,45 @@ CLASS Playground.Mips.UI.Browser.UserBrowser
         BrowserColumnDefinition:Caption = "Language":U.
         BrowserDefinition:Add(BrowserColumnDefinition).
 
+       /*
+        {Consultingwerk/foreachABL.i BrowserColumnDefinition BrowserColumnDefinition in BrowserDefinition}
+
+            BrowserColumnDefinition = NEW BrowserColumnDefinition().
+            BrowserColumnDefinition:DataSourceName = "usr_LoginName":U.
+            BrowserColumnDefinition:Caption = "Login name":U.
+            BrowserDefinition:BrowserColumns[1] = BrowserColumnDefinition.
+        END.
+*/
+        /*EXTENT(BrowserDefinition:BrowserColumns) = 5.
+
+        BrowserColumnDefinition = NEW BrowserColumnDefinition().
+        BrowserColumnDefinition:DataSourceName = "usr_LoginName":U.
+        BrowserColumnDefinition:Caption = "Login name":U.
+        BrowserDefinition:BrowserColumns[1] = BrowserColumnDefinition.
+
+        BrowserColumnDefinition = NEW BrowserColumnDefinition().
+        BrowserColumnDefinition:DataSourceName = "usr_Initials":U.
+        BrowserColumnDefinition:Caption = "Initials":U.
+        BrowserDefinition:BrowserColumns[2] = BrowserColumnDefinition.
+
+        BrowserColumnDefinition = NEW BrowserColumnDefinition().
+        BrowserColumnDefinition:DataSourceName = "usr_FirstName":U.
+        BrowserColumnDefinition:Caption = "First name":U.
+        BrowserDefinition:BrowserColumns[3] = BrowserColumnDefinition.
+
+        BrowserColumnDefinition = NEW BrowserColumnDefinition().
+        BrowserColumnDefinition:DataSourceName = "usr_LastName":U.
+        BrowserColumnDefinition:Caption = "Last name":U.
+        BrowserDefinition:BrowserColumns[4] = BrowserColumnDefinition.
+
+        BrowserColumnDefinition = NEW BrowserColumnDefinition().
+        BrowserColumnDefinition:DataSourceName = "lng_Name":U.
+        BrowserColumnDefinition:Caption = "Language":U.
+        BrowserDefinition:BrowserColumns[5] = BrowserColumnDefinition.
+*/
         RETURN BrowserDefinition.
 
     END METHOD.
-
-    /*****************************************************************************/
 
     METHOD PUBLIC OVERRIDE DataRetrievalRequest CreateDataRetrievalRequest():
 
@@ -119,42 +140,6 @@ CLASS Playground.Mips.UI.Browser.UserBrowser
 
         RETURN DataRetrievalRequest.
 
-    END METHOD.
-
-    /*****************************************************************************/
-
-    DEFINE PUBLIC EVENT NotifyObjectChanged SIGNATURE VOID(Sender AS Progress.Lang.Object, NotifyObjectChangedEventArgs AS NotifyObjectChangedEventArgs).
-
-    METHOD PUBLIC VOID ParentChangedHandler(Sender AS Progress.Lang.Object, NotifyObjectChangedEventArgs AS NotifyObjectChangedEventArgs):
-
-    END.
-
-    /*****************************************************************************/
-
-    METHOD PUBLIC VOID Close():
-
-    END.
-
-    /*****************************************************************************/
-
-    METHOD PUBLIC VOID HandleToolCommand(ToolCommandParameter AS ToolCommandParameter):
-
-        CASE ToolCommandParameter:ToolKey:
-            WHEN "User" THEN MESSAGE  ToolCommandParameter:ToolKey VIEW-AS ALERT-BOX.
-        END CASE.
-
-    END METHOD.
-
-    /*****************************************************************************/
-
-    METHOD PUBLIC RibbonDefinition GetRibbonDefinition():
-        RETURN UserRibbon:GetRibbonDefinition().
-    END METHOD.
-
-    /*****************************************************************************/
-
-    METHOD PUBLIC MenuItemDefinition GetMenuItemDefinition():
-        RETURN UserMenu:GetMenuItemDefinition().
     END METHOD.
 
 END CLASS.

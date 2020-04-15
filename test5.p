@@ -1,4 +1,5 @@
 
-RUN runtest.p.
+RUN gp_wait(1000).
+MESSAGE "" VIEW-AS ALERT-BOX.
 
 

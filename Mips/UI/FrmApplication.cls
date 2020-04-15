@@ -139,6 +139,7 @@ CLASS Playground.Mips.UI.FrmApplication INHERITS FrmBase:
         THIS-OBJECT:Controls:Add(THIS-OBJECT:m_FrmApplication_Toolbars_Dock_Area_Right).
         THIS-OBJECT:Controls:Add(THIS-OBJECT:m_FrmApplication_Toolbars_Dock_Area_Bottom).
         THIS-OBJECT:Controls:Add(THIS-OBJECT:m_FrmApplication_Toolbars_Dock_Area_Top).
+        THIS-OBJECT:IsMdiContainer = TRUE.
         THIS-OBJECT:Name = "FrmApplication":U.
         THIS-OBJECT:Text = "FrmApplication":U.
         CAST(THIS-OBJECT:ultraToolbarsManager1, System.ComponentModel.ISupportInitialize):EndInit().

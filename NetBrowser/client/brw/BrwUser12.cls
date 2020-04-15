@@ -36,16 +36,13 @@ USING Playground.NetBrowser.shared.QueryBlock FROM PROPATH.
 USING Infragistics.Win.UltraWinGrid.SortIndicator FROM ASSEMBLY.
 USING Infragistics.Win.UltraWinGrid.CellClickAction FROM ASSEMBLY.
 USING Playground.BrowserExtension.SearchDataSourceOrigin FROM PROPATH.
-USING Playground.NetBrowser.client.brw.BrowserDefinition.BrowserDefinition FROM PROPATH.
-USING Playground.BrowserExtension.BrowserHelper FROM PROPATH.
-USING Progress.Windows.UserControl FROM ASSEMBLY.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 //&SCOPED-DEFINE AbstractWindowManagerClient 1
 
 
-CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTRACT:
+CLASS Playground.NetBrowser.client.brw.BrwUser12 INHERITS FORM:
 
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
 
@@ -54,33 +51,14 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
     DEFINE PRIVATE VARIABLE BindingSource AS Progress.Data.BindingSource NO-UNDO.
     DEFINE PRIVATE VARIABLE TempTableQueryHandle AS HANDLE NO-UNDO.
     DEFINE PRIVATE VARIABLE TempTableHandle AS HANDLE NO-UNDO.
-    DEFINE PRIVATE VARIABLE DataRetrievalResponse AS DataRetrievalResponse NO-UNDO.
-    DEFINE PRIVATE VARIABLE DataRetrivalProxy AS DataRetrievalProxy NO-UNDO.
+    DEFINE VARIABLE DataRetrievalResponse AS DataRetrievalResponse NO-UNDO.
+    DEFINE VARIABLE DataRetrivalProxy AS DataRetrievalProxy NO-UNDO.
 
-    DEFINE PRIVATE VARIABLE RowScrollRegion AS RowScrollRegion NO-UNDO.
-    DEFINE PRIVATE VARIABLE BrowserExtension AS BrowserExtension NO-UNDO.
-    DEFINE PRIVATE VARIABLE IsScrollingUp AS LOGICAL NO-UNDO.
-    DEFINE PRIVATE VARIABLE IsBusyWithDisplay AS LOGICAL NO-UNDO INITIAL NO.
-
-    DEFINE PUBLIC PROPERTY test AS CHARACTER NO-UNDO
-    GET.
-    SET.
-
-    DEFINE PUBLIC PROPERTY BatchSize_ AS INTEGER NO-UNDO
-    GET(): RETURN 50.
-    END.
-    SET.
-    
-    DEFINE PUBLIC PROPERTY DataRetrievalRequest_ AS DataRetrievalRequest NO-UNDO
-    GET(): 
-        IF VALID-OBJECT(DataRetrievalRequest_) = NO
-        THEN DataRetrievalRequest_ = CreateDataRetrievalRequest().
-        RETURN DataRetrievalRequest_.
-    END.
-    SET.   
-    
-    DEFINE PUBLIC ABSTRACT  PROPERTY BrowserSortColumName_ AS CHARACTER NO-UNDO
-    GET.
+    DEFINE VARIABLE RowScrollRegion AS RowScrollRegion NO-UNDO.
+    DEFINE VARIABLE BrowserExtension AS BrowserExtension NO-UNDO.
+    DEFINE VARIABLE IsScrollingUp AS LOGICAL NO-UNDO.
+    DEFINE VARIABLE BatchSize_ AS INTEGER NO-UNDO INITIAL 50.
+    DEFINE VARIABLE IsBusyWithDisplay AS LOGICAL NO-UNDO INITIAL NO.
 
     /*****************************************************************************/
 
@@ -103,10 +81,9 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
     DEFINE PUBLIC PROPERTY PossibelSorting AS CHARACTER EXTENT NO-UNDO
     GET.
     SET.
-
     /*****************************************************************************/
 
-    CONSTRUCTOR PUBLIC GenericBrowser():
+    CONSTRUCTOR PUBLIC BrwUser12 (  ):
 
         SUPER().
 
@@ -139,7 +116,7 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
         ultraGrid1:DisplayLayout:Override:SelectTypeRow = SelectType:SINGLE.
 
         EXTENT(PossibelSorting) = 1.
-        PossibelSorting[1]= BrowserSortColumName_.
+        PossibelSorting[1]= "usr_LoginName".
 
         ASSIGN DataRetrivalProxy = NEW DataRetrievalProxy(AppServerHandle).
 
@@ -150,13 +127,13 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
             THIS-OBJECT:ultraGrid1:AfterSortChange:UNSubscribe(THIS-OBJECT:ultraGrid1_AfterSortChange).
             THIS-OBJECT:ultraGrid1:BeforeSortChange:UNSubscribe(THIS-OBJECT:ultraGrid1_BeforeSortChange).
 
-            THIS-OBJECT:ultraGrid1:DisplayLayout:Bands[0]:SortedColumns:Add(BrowserSortColumName_, false, false). // key, desending, groupby
+            THIS-OBJECT:ultraGrid1:DisplayLayout:Bands[0]:SortedColumns:Add("usr_LoginName", false, false). // key, desending, groupby
 
             THIS-OBJECT:ultraGrid1:AfterSortChange:Subscribe(THIS-OBJECT:ultraGrid1_AfterSortChange).
             THIS-OBJECT:ultraGrid1:BeforeSortChange:Subscribe(THIS-OBJECT:ultraGrid1_BeforeSortChange).
         END.
         ELSE DO:
-            THIS-OBJECT:ultraGrid1:DisplayLayout:Bands[0]:SortedColumns:Add(BrowserSortColumName_, false, false). // key, desending, groupby
+            THIS-OBJECT:ultraGrid1:DisplayLayout:Bands[0]:SortedColumns:Add("usr_LoginName", false, false). // key, desending, groupby
         END.
 
         CATCH e AS Progress.Lang.Error:
@@ -168,19 +145,58 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
     /*****************************************************************************/
 
     METHOD PRIVATE VOID InitializeGrid():
+        DEFINE VARIABLE ultraGridBand1 AS Infragistics.Win.UltraWinGrid.UltraGridBand NO-UNDO.
+        ultraGridBand1 = NEW Infragistics.Win.UltraWinGrid.UltraGridBand("sc_User":U, -1).
+
+        DEFINE VARIABLE ultraGridColumn1 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+        ultraGridColumn1 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn("usr_LoginName":U).
+        ultraGridColumn1:Header:Caption= "Login name".
+        DEFINE VARIABLE ultraGridColumn2 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+        ultraGridColumn2 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn("usr_Initials":U).
+        ultraGridColumn2:Header:Caption= "Initials".
+        DEFINE VARIABLE ultraGridColumn3 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+        ultraGridColumn3 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn("usr_FirstName":U).
+        ultraGridColumn3:Header:Caption= "First name".
+        DEFINE VARIABLE ultraGridColumn4 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+        ultraGridColumn4 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn("usr_LastName":U).
+        ultraGridColumn4:Header:Caption= "Last name".
+        DEFINE VARIABLE ultraGridColumn5 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+        ultraGridColumn5 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn("lng_Name":U).
+        ultraGridColumn5:Header:Caption= "Language".
+        DEFINE VARIABLE ultraGridColumn6 AS Infragistics.Win.UltraWinGrid.UltraGridColumn NO-UNDO.
+        ultraGridColumn6 = NEW Infragistics.Win.UltraWinGrid.UltraGridColumn("f_rowid_":U).
+        ultraGridColumn6:Hidden = YES.
 
         THIS-OBJECT:ultraGrid1 = NEW Infragistics.Win.UltraWinGrid.UltraGrid().
+        CAST(THIS-OBJECT:ultraGrid1, System.ComponentModel.ISupportInitialize):BeginInit().
+
+        THIS-OBJECT:SuspendLayout().
+
+
+        DEFINE VARIABLE arrayvar0 AS System.Object EXTENT 6 NO-UNDO.
+        arrayvar0[1] = ultraGridColumn1.
+        arrayvar0[2] = ultraGridColumn2.
+        arrayvar0[3] = ultraGridColumn3.
+        arrayvar0[4] = ultraGridColumn4.
+        arrayvar0[5] = ultraGridColumn5.
+        arrayvar0[6] = ultraGridColumn6.
+        ultraGridBand1:Columns:AddRange(arrayvar0).
+        THIS-OBJECT:ultraGrid1:DisplayLayout:BandsSerializer:Add(ultraGridBand1).
+        THIS-OBJECT:ultraGrid1:DisplayLayout:BorderStyle = Infragistics.Win.UIElementBorderStyle:Solid.
+
         THIS-OBJECT:ultraGrid1:Dock = System.Windows.Forms.DockStyle:Fill.
         THIS-OBJECT:ultraGrid1:Location = NEW System.Drawing.Point(0, 0).
         THIS-OBJECT:ultraGrid1:Name = "ultraGrid1":U.
+        THIS-OBJECT:ultraGrid1:Size = NEW System.Drawing.Size(837, 386).
 
         THIS-OBJECT:ClientSize = NEW System.Drawing.Size(837, 386).
         THIS-OBJECT:Controls:Add(THIS-OBJECT:ultraGrid1).
+        THIS-OBJECT:Cursor = System.Windows.Forms.Cursors:Default.
+        THIS-OBJECT:Name = "BrwUser":U.
+        THIS-OBJECT:Text = "BrwUser":U.
+        CAST(THIS-OBJECT:ultraGrid1, System.ComponentModel.ISupportInitialize):EndInit().
 
-        NEW BrowserHelper():InitializeGrid(UltraGrid1, GetBrowserDefinition()).
-
-        RETURN.
-
+        THIS-OBJECT:ResumeLayout(FALSE).
     END METHOD.
 
     /*****************************************************************************/
@@ -343,9 +359,8 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
             TempTableQueryHandle:QUERY-PREPARE("PRESELECT EACH temptable":U).
 
             BindingSource = NEW Progress.Data.BindingSource(
-                TempTableQueryHandle,                
-                //"usr_LoginName, usr_Initials, usr_LastName, usr_FirstName, lng_Name, f_rowid_":U /* include-fields */,
-                DataRetrievalRequest_:GetFieldListsForBrowser(),
+                TempTableQueryHandle,
+                "usr_LoginName, usr_Initials, usr_LastName, usr_FirstName, lng_Name, f_rowid_":U /* include-fields */,
                 ? /* except-fields */).
             ASSIGN BindingSource:AllowEdit = FALSE
                 BindingSource:AllowRemove = FALSE
@@ -426,6 +441,49 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
             e:RowsAdded = NumberOfRecordsAdded. // hCountQuery:NUM-RESULTS - iNumResults .
 
     END METHOD.
+
+    /*****************************************************************************/
+
+    METHOD PRIVATE DataRetrievalRequest CreateDataRetrievalRequest():
+
+        DEFINE VARIABLE DataRetrievalRequest AS DataRetrievalRequest NO-UNDO.
+        DEFINE VARIABLE QueryBlocks AS QueryBlock EXTENT 2 NO-UNDO.
+        DEFINE VARIABLE QueryBlcok AS QueryBlock NO-UNDO.
+
+        /* --------------------------------------------------------------------- */
+
+        ASSIGN
+            QueryBlcok = NEW QueryBlock()
+            QueryBlcok:ForPhrase = "FOR EACH":U
+            QueryBlcok:TableName = "sc_User":U
+            QueryBlcok:FieldList = "usr_AutoLoginAllowed usr_Enabled usr_FirstName usr_Id usr_Initials usr_Language usr_LastName usr_LoginName":U
+            QueryBlcok:WherePhrase = "sc_User.usr_Enabled = yes":U
+            QueryBlcok:Hints = "NO-LOCK":U
+            .
+
+        QueryBlocks[1] = QueryBlcok.
+
+        ASSIGN
+            QueryBlcok = NEW QueryBlock()
+            QueryBlcok:ForPhrase = "FIRST":U
+            QueryBlcok:TableName = "gp_Language":U
+            QueryBlcok:FieldList = "lng_Id lng_Name":U
+            QueryBlcok:WherePhrase = "gp_Language.lng_Id = sc_User.usr_Language":U
+            QueryBlcok:Hints = "NO-LOCK OUTER-JOIN":U
+            .
+
+        QueryBlocks[2] = QueryBlcok.
+
+        ASSIGN DataRetrievalRequest = NEW DataRetrievalRequest()
+            DataRetrievalRequest:BatchSize = BatchSize_
+            DataRetrievalRequest:Direction = DataRetrievalConstant:Forwards
+            DataRetrievalRequest:QueryBlocks = QueryBlocks
+            DataRetrievalRequest:SortingPhrase = "BY sc_User.usr_LoginName"
+            .
+
+        RETURN DataRetrievalRequest.
+
+    END.
 
     /*****************************************************************************/
 
@@ -588,16 +646,7 @@ CLASS Playground.NetBrowser.client.brw.GenericBrowser INHERITS UserControl ABSTR
 
     /*****************************************************************************/
 
-    METHOD ABSTRACT BrowserDefinition GetBrowserDefinition():
-
-    /*****************************************************************************/
-
-    METHOD ABSTRACT DataRetrievalRequest CreateDataRetrievalRequest():
-
-
-    /*****************************************************************************/
-
-    DESTRUCTOR PUBLIC GenericBrowser ( ):
+    DESTRUCTOR PUBLIC BrwUser12 ( ):
         IF VALID-HANDLE(TempTableQueryHandle)
         THEN DELETE OBJECT TempTableQueryHandle.
 

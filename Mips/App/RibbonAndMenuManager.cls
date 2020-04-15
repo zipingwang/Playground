@@ -126,7 +126,7 @@ CLASS Playground.Mips.App.RibbonAndMenuManager:
 
         /* --------------------------------------------------------------------- */
 
-        ASSIGN MenuItemDefinition = ContextObjectBase:MenuItemDefinition.
+        ASSIGN MenuItemDefinition = ContextObjectBase:GetMenuItemDefinition().
 
         ASSIGN RootMenuTool = GenerateUltraPopupMenuTool(MenuItemDefinition, ultraToolbarsManager, ContextObjectBase).
 
